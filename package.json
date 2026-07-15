@@ -14,7 +14,7 @@
     "kill": "lsof -ti:3002 | xargs kill -9 2>/dev/null || echo 'No processes found on port 3002'"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.3",
+    "@biomejs/biome": "2.5.4",
     "turbo": "2.10.5",
     "typescript": "7.0.2"
   },
