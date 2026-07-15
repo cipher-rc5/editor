@@ -19,7 +19,7 @@
   "scripts": {
     "build": "tsc --build",
     "dev": "tsc --build --watch",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "bun run build"
   },
   "peerDependencies": {
     "@pascal-app/core": "^0.8.0",
@@ -29,16 +29,16 @@
     "three": "^0.184"
   },
   "dependencies": {
-    "three-bvh-csg": "^0.0.18",
-    "three-mesh-bvh": "^0.9.8",
-    "zustand": "^5"
+    "three-bvh-csg": "0.0.18",
+    "three-mesh-bvh": "0.9.11",
+    "zustand": "5.0.14"
   },
   "devDependencies": {
     "@pascal/typescript-config": "*",
-    "@types/node": "^22",
-    "@types/react": "^19.2.2",
-    "@types/three": "^0.184.0",
-    "typescript": "6.0.2"
+    "@types/node": "26.1.1",
+    "@types/react": "19.2.17",
+    "@types/three": "0.185.1",
+    "typescript": "7.0.2"
   },
   "keywords": [
     "3d",
