@@ -1,5 +1,5 @@
-import dedent from 'dedent'
 import { z } from 'zod'
+import dedent from '../../lib/dedent'
 import { BaseNode, nodeType, objectId } from '../base'
 import { ElevatorNode } from './elevator'
 import { LevelNode } from './level'
