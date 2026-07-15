@@ -293,8 +293,7 @@ export const CeilingTool: React.FC = () => {
           transparent
         />
       </mesh>
-      {/* @ts-ignore */}
-      <line geometry={verticalGeo} layers={EDITOR_LAYER} ref={verticalLineRef} renderOrder={1}>
+      <threeLine geometry={verticalGeo} layers={EDITOR_LAYER} ref={verticalLineRef} renderOrder={1}>
         <lineBasicNodeMaterial
           color="#818cf8"
           depthTest={false}
@@ -302,7 +301,7 @@ export const CeilingTool: React.FC = () => {
           opacityNode={gradientOpacityNode}
           transparent
         />
-      </line>
+      </threeLine>
       {previewShape && (
         <mesh
           frustumCulled={false}
@@ -337,23 +336,19 @@ export const CeilingTool: React.FC = () => {
           />
         </mesh>
       )}
-      {/* @ts-ignore */}
-      <line
+      <threeLine
         frustumCulled={false}
         layers={EDITOR_LAYER}
-        // @ts-expect-error
         ref={mainLineRef}
         renderOrder={1}
         visible={false}
       >
         <bufferGeometry />
         <lineBasicNodeMaterial color="#818cf8" depthTest={false} depthWrite={false} linewidth={3} />
-      </line>
-      {/* @ts-ignore */}
-      <line
+      </threeLine>
+      <threeLine
         frustumCulled={false}
         layers={EDITOR_LAYER}
-        // @ts-expect-error
         ref={closingLineRef}
         renderOrder={1}
         visible={false}
@@ -367,12 +362,10 @@ export const CeilingTool: React.FC = () => {
           opacity={0.5}
           transparent
         />
-      </line>
-      {/* @ts-ignore */}
-      <line
+      </threeLine>
+      <threeLine
         frustumCulled={false}
         layers={EDITOR_LAYER}
-        // @ts-expect-error
         ref={groundMainLineRef}
         renderOrder={1}
         visible={false}
@@ -386,12 +379,10 @@ export const CeilingTool: React.FC = () => {
           opacity={0.3}
           transparent
         />
-      </line>
-      {/* @ts-ignore */}
-      <line
+      </threeLine>
+      <threeLine
         frustumCulled={false}
         layers={EDITOR_LAYER}
-        // @ts-expect-error
         ref={groundClosingLineRef}
         renderOrder={1}
         visible={false}
@@ -405,7 +396,7 @@ export const CeilingTool: React.FC = () => {
           opacity={0.15}
           transparent
         />
-      </line>
+      </threeLine>
       {points.map(([x, z], index) => (
         <CursorSphere
           color="#818cf8"

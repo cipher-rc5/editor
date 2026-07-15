@@ -35,7 +35,7 @@ bun dev   # from this directory, or `turbo run dev` at the repo root
 ```
 
 The `web-ifc.wasm` binary is copied into `public/` automatically on
-install/dev/build (`scripts/copy-web-ifc-wasm.mjs`). Large example IFCs are
+install/dev/build (`scripts/copy-web-ifc-wasm.ts`). Large example IFCs are
 fetched from a public bucket at runtime; the small ones are committed under
 `public/test-ifc-files/`. Override the bucket with
 `NEXT_PUBLIC_IFC_EXAMPLES_BASE_URL`.

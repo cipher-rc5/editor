@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
   // app keeps `WebAssembly.instantiateStreaming` happy with strict CSP /
   // module-MIME-type checks. The standalone repo copied the file into
   // public/; we do the same on first dev/build via a postinstall step
-  // (see scripts/copy-web-ifc-wasm.mjs).
+  // (see scripts/copy-web-ifc-wasm.ts).
   webpack: (config) => {
     config.experiments = { ...config.experiments, asyncWebAssembly: true }
     return config
