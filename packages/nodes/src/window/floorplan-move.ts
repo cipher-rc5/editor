@@ -63,7 +63,7 @@ export const windowFloorplanMoveTarget: FloorplanMoveTarget<WindowNode> = ({ nod
     },
     canCommit() {
       const live = useScene.getState().nodes[node.id as AnyNodeId] as WindowNode | undefined
-      if (!live || live.type !== 'window') return false
+      if (live?.type !== 'window') return false
       const overlapping = hasWallChildOverlap(
         live.parentId as string,
         live.position[0],

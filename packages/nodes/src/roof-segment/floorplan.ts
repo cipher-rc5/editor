@@ -20,7 +20,7 @@ export function buildRoofSegmentFloorplan(
   ctx: GeometryContext,
 ): FloorplanGeometry | null {
   const roof = ctx.parent as RoofNode | null
-  if (!roof || roof.type !== 'roof') return null
+  if (roof?.type !== 'roof') return null
 
   // Segment center in world coords: parent roof's transform applied to
   // the segment's local position offset.

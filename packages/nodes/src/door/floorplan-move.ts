@@ -68,7 +68,7 @@ export const doorFloorplanMoveTarget: FloorplanMoveTarget<DoorNode> = ({ node })
     },
     canCommit() {
       const live = useScene.getState().nodes[node.id as AnyNodeId] as DoorNode | undefined
-      if (!live || live.type !== 'door') return false
+      if (live?.type !== 'door') return false
       // Block commit if the door overlaps any other wall child at its
       // current position. The 3D port has the same guard.
       const overlapping = hasWallChildOverlap(

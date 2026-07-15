@@ -63,7 +63,7 @@ export const ceilingFloorplanMoveTarget: FloorplanMoveTarget<CeilingNode> = ({ n
     },
     canCommit() {
       const live = useScene.getState().nodes[ceilingId] as CeilingNode | undefined
-      if (!live || live.type !== 'ceiling') return false
+      if (live?.type !== 'ceiling') return false
       const [dx, dz] = lastDelta
       if (dx === 0 && dz === 0) return false
       // Sync commit sequence — see `slab/floorplan-move.ts` for the

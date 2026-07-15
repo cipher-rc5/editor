@@ -29,7 +29,6 @@ const useGLTFKTX2 = (path: string): ReturnType<typeof useGLTF> => {
     }
 
     if (ktx2ConfiguredRenderers.has(renderer)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       loader.setKTX2Loader(ktx2LoaderInstance as any)
     }
 

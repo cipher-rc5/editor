@@ -58,7 +58,6 @@ export function buildFrameGeometry({
     innerBox.dispose()
     result.geometry.dispose()
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.error('Skylight frame CSG failed:', e)
     outerBox.dispose()
     innerBox.dispose()

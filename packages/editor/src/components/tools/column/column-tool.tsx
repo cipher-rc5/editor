@@ -16,7 +16,6 @@ import { sfxEmitter } from '../../../lib/sfx-bus'
 import { CursorSphere } from '../shared/cursor-sphere'
 
 const COLUMN_ICON = (
-  // eslint-disable-next-line @next/next/no-img-element
   <img
     alt="Column"
     src="/icons/column.png"

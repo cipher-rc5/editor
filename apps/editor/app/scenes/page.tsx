@@ -87,7 +87,6 @@ export default async function ScenesPage() {
                 >
                   <div className="flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-accent/30">
                     {scene.thumbnailUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         alt={scene.name}
                         className="h-full w-full object-cover"

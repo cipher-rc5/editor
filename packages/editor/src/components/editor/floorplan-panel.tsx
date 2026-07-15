@@ -3946,7 +3946,7 @@ export function FloorplanPanel() {
   const elevators = useScene(
     useShallow((state) => {
       const building = currentBuildingId ? state.nodes[currentBuildingId] : null
-      if (!building || building.type !== 'building') {
+      if (building?.type !== 'building') {
         return [] as ElevatorNode[]
       }
 
@@ -6797,7 +6797,7 @@ export function FloorplanPanel() {
     }
 
     const wallNode = useScene.getState().nodes[wallId as AnyNodeId]
-    if (!wallNode || wallNode.type !== 'wall') {
+    if (wallNode?.type !== 'wall') {
       return
     }
 
@@ -8135,7 +8135,7 @@ export function FloorplanPanel() {
             }
 
             const buildingNode = sceneNodes[nextBuildingId]
-            if (!buildingNode || buildingNode.type !== 'building') {
+            if (buildingNode?.type !== 'building') {
               return null
             }
 
@@ -8357,7 +8357,7 @@ export function FloorplanPanel() {
           </form>
         )}
 
-        {!levelNode || levelNode.type !== 'level' ? (
+        {levelNode?.type !== 'level' ? (
           <div className="flex h-full items-center justify-center px-6 text-center text-muted-foreground text-sm">
             Switch to a building level to view and edit the floorplan.
           </div>

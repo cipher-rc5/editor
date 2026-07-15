@@ -909,7 +909,7 @@ export const SelectionManager = () => {
             : node.parentId
               ? useScene.getState().nodes[node.parentId as AnyNodeId]
               : null
-        if (!roofNode || roofNode.type !== 'roof') return null
+        if (roofNode?.type !== 'roof') return null
 
         const role = resolveRoofMaterialTarget(event as RoofEvent | RoofSegmentEvent)
         const compatible = role !== null && hasActivePaintMaterial(activePaintMaterial)
@@ -976,7 +976,7 @@ export const SelectionManager = () => {
             : node.parentId
               ? useScene.getState().nodes[node.parentId as AnyNodeId]
               : null
-        if (!stairNode || stairNode.type !== 'stair') return null
+        if (stairNode?.type !== 'stair') return null
 
         const role = resolveStairMaterialTarget(event as StairEvent | StairSegmentEvent)
         const compatible = role !== null && hasActivePaintMaterial(activePaintMaterial)

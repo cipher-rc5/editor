@@ -198,14 +198,14 @@ function collectNodeIdsInBounds(bounds: Bounds): string[] {
 
   if (!levelId) return []
   const levelNode = nodes[levelId] as LevelNode | undefined
-  if (!levelNode || levelNode.type !== 'level') return []
+  if (levelNode?.type !== 'level') return []
 
   const result: string[] = []
 
   if (phase === 'structure' && structureLayer === 'zones') {
     for (const childId of levelNode.children) {
       const node = nodes[childId as AnyNodeId]
-      if (!node || node.type !== 'zone') continue
+      if (node?.type !== 'zone') continue
       const zone = node as ZoneNode
       if (polygonIntersectsBounds(zone.polygon, bounds)) {
         result.push(zone.id)

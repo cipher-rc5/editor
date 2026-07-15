@@ -181,7 +181,6 @@ function getPrimarySlopeRun(input: PitchInputs & ShapeRatios): number {
       return min * input.mansardSteepWidthRatio
     case 'dutch':
       return min * input.dutchHipWidthRatio
-    case 'hip':
     default:
       return min / 2
   }

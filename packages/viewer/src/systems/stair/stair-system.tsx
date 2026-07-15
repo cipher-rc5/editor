@@ -85,7 +85,7 @@ export const StairSystem = () => {
     // --- Pass 1b: Sync chained transforms to individual segment meshes (edit mode) ---
     for (const stairId of parentsNeedingSegmentSync) {
       const stairNode = nodes[stairId]
-      if (!stairNode || stairNode.type !== 'stair') continue
+      if (stairNode?.type !== 'stair') continue
       const group = sceneRegistry.nodes.get(stairId) as THREE.Group | undefined
       if (group) {
         syncStairGroupElevation(stairNode as StairNode, group, nodes)
@@ -99,7 +99,7 @@ export const StairSystem = () => {
       if (stairsProcessed >= MAX_STAIRS_PER_FRAME) break
 
       const node = nodes[id]
-      if (!node || node.type !== 'stair') {
+      if (node?.type !== 'stair') {
         pendingStairUpdates.delete(id)
         continue
       }
@@ -1082,7 +1082,7 @@ function computeAbsoluteHeight(node: StairSegmentNode): number {
   if (!node.parentId) return 0
 
   const parent = nodes[node.parentId as AnyNodeId]
-  if (!parent || parent.type !== 'stair') return 0
+  if (parent?.type !== 'stair') return 0
 
   const stair = parent as StairNode
   const segments = (stair.children ?? [])

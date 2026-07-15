@@ -63,7 +63,7 @@ export function findClosestWallInPlan(
 
   for (const childId of childIds) {
     const node = nodes[childId]
-    if (!node || node.type !== 'wall') continue
+    if (node?.type !== 'wall') continue
     if (childId === excludeWallId) continue
     const wall = node as WallNode
     if (isCurvedWall(wall)) continue

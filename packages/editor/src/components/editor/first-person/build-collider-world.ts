@@ -95,7 +95,7 @@ function shouldSkipColliderNode(nodeId: string, type: (typeof COLLIDER_NODE_TYPE
   if (type !== 'door') return false
 
   const node = useScene.getState().nodes[nodeId as AnyNodeId]
-  if (!node || node.type !== 'door') return false
+  if (node?.type !== 'door') return false
 
   if (!node.segments.length) return true
 
@@ -273,7 +273,9 @@ export function buildFirstPersonColliderWorldFromRegistry(): FirstPersonCollider
   }
 
   const mergedGeometry = mergeGeometries(geometries, false)
-  geometries.forEach((geometry) => geometry.dispose())
+  geometries.forEach((geometry) => {
+    geometry.dispose()
+  })
 
   if (!mergedGeometry || mergedGeometry.getAttribute('position') == null) {
     mergedGeometry?.dispose()

@@ -99,7 +99,7 @@ export const WallCutout = () => {
         const wallMesh = sceneRegistry.nodes.get(wallId)
         if (!wallMesh) return
         const wallNode = useScene.getState().nodes[wallId as WallNode['id']]
-        if (!wallNode || wallNode.type !== 'wall') return
+        if (wallNode?.type !== 'wall') return
 
         const hideWall = getWallHideState(wallNode, wallMesh as Mesh, wallMode, u)
         const isDeleteHighlighted = deleteHoveredWallId === wallId
@@ -138,7 +138,7 @@ export const WallCutout = () => {
         const wallMesh = sceneRegistry.nodes.get(wallId) as Mesh | undefined
         if (!wallMesh) return
         const wallNode = useScene.getState().nodes[wallId as AnyNodeId] as WallNode | undefined
-        if (!wallNode || wallNode.type !== 'wall') return
+        if (wallNode?.type !== 'wall') return
         const mats = getMaterialsForWall(
           wallNode,
           useViewer.getState().shading,

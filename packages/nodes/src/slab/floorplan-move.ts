@@ -90,7 +90,7 @@ export const slabFloorplanMoveTarget: FloorplanMoveTarget<SlabNode> = ({ node })
     },
     canCommit() {
       const live = useScene.getState().nodes[slabId] as SlabNode | undefined
-      if (!live || live.type !== 'slab') return false
+      if (live?.type !== 'slab') return false
       const [dx, dz] = lastDelta
       if (dx === 0 && dz === 0) return false
       // Side-effect commit sequence — mirrors `MoveSlabTool.onGridClick`
