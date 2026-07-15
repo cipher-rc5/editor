@@ -30,7 +30,9 @@ describe('get_node', () => {
       arguments: { id: rootId },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.node.id).toBe(rootId)
   })
 

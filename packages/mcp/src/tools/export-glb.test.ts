@@ -27,7 +27,9 @@ describe('export_glb', () => {
       arguments: {},
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.status).toBe('not_implemented')
     expect(typeof parsed.reason).toBe('string')
   })

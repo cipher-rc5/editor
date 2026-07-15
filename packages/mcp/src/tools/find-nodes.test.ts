@@ -28,7 +28,9 @@ describe('find_nodes', () => {
       arguments: { type: 'level' },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.nodes.length).toBeGreaterThan(0)
     for (const n of parsed.nodes) {
       expect(n.type).toBe('level')
@@ -40,7 +42,9 @@ describe('find_nodes', () => {
       name: 'find_nodes',
       arguments: { type: 'roof' },
     })
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(Array.isArray(parsed.nodes)).toBe(true)
     expect(parsed.nodes.length).toBe(0)
   })
@@ -67,7 +71,9 @@ describe('find_nodes', () => {
       name: 'find_nodes',
       arguments: { type: 'wall', zoneId: zone.id },
     })
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     const ids: string[] = parsed.nodes.map((n: { id: string }) => n.id)
     expect(ids).toContain(inWall.id)
     expect(ids).not.toContain(outWall.id)

@@ -36,7 +36,9 @@ describe('create_wall', () => {
       },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.wallId).toMatch(/^wall_/)
     const created = bridge.getNode(parsed.wallId)
     expect(created).not.toBeNull()
@@ -117,7 +119,9 @@ describe('create_wall', () => {
     })
 
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(savedGraphs).toHaveLength(1)
     const savedGraph = savedGraphs[0]
     expect(savedGraph).toBeDefined()

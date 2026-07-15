@@ -39,7 +39,9 @@ describe('cut_opening', () => {
       },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.openingId).toMatch(/^door_/)
     const created = bridge.getNode(parsed.openingId)
     expect((created as { wallId?: string }).wallId).toBe(wall.id)
@@ -63,7 +65,9 @@ describe('cut_opening', () => {
         height: 1.2,
       },
     })
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.openingId).toMatch(/^window_/)
     const created = bridge.getNode(parsed.openingId)
     expect((created as { position: [number, number, number] }).position[0]).toBeCloseTo(1.25, 3)

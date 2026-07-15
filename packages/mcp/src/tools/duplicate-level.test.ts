@@ -33,7 +33,9 @@ describe('duplicate_level', () => {
       arguments: { levelId: level.id },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.newLevelId).toMatch(/^level_/)
     expect(parsed.newLevelId).not.toBe(level.id)
     expect(parsed.newNodeIds.length).toBeGreaterThanOrEqual(2)

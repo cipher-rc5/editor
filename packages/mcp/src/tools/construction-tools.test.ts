@@ -49,7 +49,9 @@ describe('construction tools', () => {
       },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.wallIds).toHaveLength(4)
     expect(parsed.slabId).toMatch(/^slab_/)
     expect(parsed.ceilingId).toMatch(/^ceiling_/)
@@ -101,7 +103,9 @@ describe('construction tools', () => {
       },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.openingPolygon).toHaveLength(4)
 
     const stair = bridge.getNode(parsed.stairId)
@@ -150,7 +154,9 @@ describe('construction tools', () => {
     expect(shell.isError).toBeFalsy()
 
     const result = await client.callTool({ name: 'verify_scene', arguments: {} })
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.hasIssues).toBe(true)
     expect(parsed.issues.join('\n')).toContain('multi-story exterior walls should be split')
   })
@@ -165,7 +171,9 @@ describe('construction tools', () => {
       arguments: { levelId: level.id, width: 8, depth: 6, roofType: 'gable' },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     const roofLevel = bridge.getNode(parsed.roofLevelId)
     const roof = bridge.getNode(parsed.roofId)
     const segment = bridge.getNode(parsed.roofSegmentId)
@@ -275,7 +283,9 @@ describe('construction tools', () => {
     expect(roof.isError).toBeFalsy()
 
     const result = await client.callTool({ name: 'verify_scene', arguments: {} })
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.hasIssues).toBe(true)
     expect(parsed.issues.join('\n')).toContain('dedicated roof level')
   })

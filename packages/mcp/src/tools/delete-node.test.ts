@@ -33,7 +33,9 @@ describe('delete_node', () => {
       arguments: { id: wall.id },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.deletedIds).toContain(wall.id)
     expect(bridge.getNode(wall.id)).toBeNull()
   })
@@ -56,7 +58,9 @@ describe('delete_node', () => {
       arguments: { id: building.id, cascade: true },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.deletedIds.length).toBeGreaterThanOrEqual(1)
     expect(bridge.getNode(building.id)).toBeNull()
   })

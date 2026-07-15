@@ -1,4 +1,5 @@
 import type { Point2D, StairNode, StairSegmentNode } from '@pascal-app/core'
+import { at, first } from '../typed-access'
 import {
   clampPlanValue,
   getPlanPointDistance,
@@ -14,7 +15,6 @@ import type {
   FloorplanStairSegmentEntry,
   StairSegmentTransform,
 } from './types'
-import { at, first } from '../typed-access'
 
 const FLOORPLAN_STAIR_OUTLINE_BAND_THICKNESS = 0.05
 const FLOORPLAN_STAIR_OUTLINE_MAX_FRACTION = 0.18

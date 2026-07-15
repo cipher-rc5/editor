@@ -577,9 +577,9 @@ export default function IfcConverter() {
               pascalData?.nodes[selectedNodeId as keyof PascalSceneGraph['nodes']] &&
               (() => {
                 if (!pascalData) return null
-                const node = pascalData.nodes[
-                  selectedNodeId as keyof PascalSceneGraph['nodes']
-                ] as IfcDisplayNode | undefined
+                const node = pascalData.nodes[selectedNodeId as keyof PascalSceneGraph['nodes']] as
+                  | IfcDisplayNode
+                  | undefined
                 if (!node) return null
                 const meta = (node.metadata ?? {}) as ConverterMetadata
                 const Row = ({ k, v }: { k: string; v: string }) => (

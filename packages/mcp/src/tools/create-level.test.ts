@@ -29,7 +29,9 @@ describe('create_level', () => {
       arguments: { buildingId: building.id, elevation: 3, label: 'Second' },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.levelId).toMatch(/^level_/)
     const created = bridge.getNode(parsed.levelId)
     expect(created).not.toBeNull()

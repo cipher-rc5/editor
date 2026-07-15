@@ -6,6 +6,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
+import { first } from '../../../lib/typed-access'
 import {
   buildSvgAnnularSectorPath,
   buildSvgArcPath,
@@ -15,7 +16,6 @@ import {
   toSvgX,
   toSvgY,
 } from '../svg-paths'
-import { first } from '../../../lib/typed-access'
 
 type FloorplanPolygonEntry = {
   points: string

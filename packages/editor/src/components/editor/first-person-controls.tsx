@@ -51,12 +51,12 @@ import {
   isOperationDoorType,
   toggleDoorOpenState,
 } from '../../lib/door-interaction'
+import { nodesByType } from '../../lib/typed-access'
 import {
   closeWindowOpenState,
   isOperableWindowType,
   toggleWindowOpenState,
 } from '../../lib/window-interaction'
-import { nodesByType } from '../../lib/typed-access'
 import useEditor from '../../store/use-editor'
 import {
   buildFirstPersonColliderWorldFromRegistry,

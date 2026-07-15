@@ -37,7 +37,9 @@ describe('place_item', () => {
       },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.itemId).toMatch(/^item_/)
     expect(parsed.status).toBe('ok')
     const item = bridge.getNode(parsed.itemId)
@@ -69,7 +71,9 @@ describe('place_item', () => {
       },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     const item = bridge.getNode(parsed.itemId)
     expect(item?.parentId).toBe(level.id)
     expect(bridge.validateScene().valid).toBe(true)

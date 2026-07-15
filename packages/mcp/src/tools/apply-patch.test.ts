@@ -37,7 +37,9 @@ describe('apply_patch', () => {
       },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.appliedOps).toBe(2)
     expect(parsed.createdIds).toContain(wall.id)
     // Wait a tick for RAF-scheduled dirty-marking to settle.

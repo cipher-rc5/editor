@@ -39,7 +39,9 @@ describe('set_zone', () => {
       },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.zoneId).toMatch(/^zone_/)
     const zone = bridge.getNode(parsed.zoneId)
     expect((zone as { name: string }).name).toBe('Kitchen')

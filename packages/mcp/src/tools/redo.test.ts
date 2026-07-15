@@ -39,7 +39,9 @@ describe('redo', () => {
       arguments: { steps: 1 },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.redone).toBe(1)
     expect(bridge.getNode(wall.id)).not.toBeNull()
   })
@@ -50,7 +52,9 @@ describe('redo', () => {
       arguments: {},
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.redone).toBe(0)
   })
 

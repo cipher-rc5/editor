@@ -34,7 +34,9 @@ describe('describe_node', () => {
       arguments: { id: wall.id },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.type).toBe('wall')
     expect(parsed.parentId).toBe(level.id)
     expect(typeof parsed.description).toBe('string')
@@ -53,7 +55,9 @@ describe('describe_node', () => {
       name: 'describe_node',
       arguments: { id: wall.id },
     })
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.ancestryIds).toContain(level.id)
   })
 

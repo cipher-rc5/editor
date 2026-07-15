@@ -36,7 +36,9 @@ describe('scene query tools', () => {
   test('list_levels returns level ids', async () => {
     const result = await client.callTool({ name: 'list_levels', arguments: {} })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.levels).toHaveLength(1)
     expect(parsed.levels[0].id).toMatch(/^level_/)
   })
@@ -64,7 +66,9 @@ describe('scene query tools', () => {
       arguments: { levelId: level.id },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.counts.walls).toBe(1)
     expect(parsed.counts.zones).toBe(1)
     expect(parsed.counts.doors).toBe(1)
@@ -79,7 +83,9 @@ describe('scene query tools', () => {
 
     const result = await client.callTool({ name: 'verify_scene', arguments: {} })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.ok).toBe(true)
     expect(parsed.valid).toBe(true)
     expect(parsed.hasIssues).toBe(true)
@@ -150,7 +156,9 @@ describe('scene query tools', () => {
 
     const result = await client.callTool({ name: 'verify_scene', arguments: {} })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.levelCount).toBe(3)
     expect(parsed.occupiedStoryCount).toBe(2)
     expect(parsed.supportLevelCount).toBe(1)
@@ -191,7 +199,9 @@ describe('scene query tools', () => {
 
     const result = await client.callTool({ name: 'verify_scene', arguments: {} })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     const issues = parsed.issues.join('\n')
     expect(issues).toContain(`window ${window.id} has wallId ${otherWall.id}`)
     expect(issues).toContain(`window ${window.id} extends outside wall ${hostWall.id}`)
@@ -229,7 +239,9 @@ describe('scene query tools', () => {
 
     const result = await client.callTool({ name: 'verify_scene', arguments: {} })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.issues.join('\n')).toContain(
       'Stair Escaping Stair footprint extends outside source floor slab',
     )
@@ -277,7 +289,9 @@ describe('scene query tools', () => {
 
     const result = await client.callTool({ name: 'verify_scene', arguments: {} })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.hasIssues).toBe(true)
     expect(parsed.issues.join('\n')).toContain('obstructs stair Main Stair')
     expect(parsed.issues.join('\n')).toContain('no destination slab opening')

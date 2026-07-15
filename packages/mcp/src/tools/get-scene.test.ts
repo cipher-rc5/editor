@@ -36,7 +36,9 @@ describe('get_scene', () => {
     const beforeCount = Object.keys(bridge.getNodes()).length
     bridge.setScene({}, [])
     const result = await client.callTool({ name: 'get_scene', arguments: {} })
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.rootNodeIds.length).toBe(0)
     expect(Object.keys(parsed.nodes).length).toBe(0)
     expect(beforeCount).toBeGreaterThan(0)

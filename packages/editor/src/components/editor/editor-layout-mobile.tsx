@@ -2,10 +2,10 @@
 
 import { getSceneTheme, useViewer } from '@pascal-app/viewer'
 import { type ReactNode, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { first } from '../../lib/typed-access'
 import useEditor from '../../store/use-editor'
 import { MobileTabBar } from '../ui/sidebar/mobile-tab-bar'
 import type { SidebarTab } from '../ui/sidebar/tab-bar'
-import { first } from '../../lib/typed-access'
 import { BottomSheet, type BottomSheetHandle } from './bottom-sheet'
 
 const MIN_SNAP = 0

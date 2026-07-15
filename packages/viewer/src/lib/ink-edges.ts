@@ -9,7 +9,7 @@ import {
   screenUV,
   smoothstep,
   vec2,
-  vec3,
+  type vec3,
 } from 'three/tsl'
 
 // The TSL node types aren't cleanly exported from `three/tsl`. The scene/ink

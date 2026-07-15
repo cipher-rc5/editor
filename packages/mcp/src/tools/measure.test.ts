@@ -34,7 +34,9 @@ describe('measure', () => {
       name: 'measure',
       arguments: { fromId: a.id, toId: b.id },
     })
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     // Midpoint a = (1,0,0); midpoint b = (11,0,0) — distance 10.
     expect(parsed.distanceMeters).toBeCloseTo(10, 5)
     expect(parsed.units).toBe('meters')
@@ -59,7 +61,9 @@ describe('measure', () => {
       name: 'measure',
       arguments: { fromId: zone.id, toId: zone.id },
     })
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.distanceMeters).toBe(0)
     expect(parsed.areaSqMeters).toBeCloseTo(16, 5)
   })

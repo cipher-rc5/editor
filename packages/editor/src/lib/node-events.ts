@@ -1,4 +1,4 @@
-import { emitter, type EventSuffix, type GridEvent, type NodeEvent } from '@pascal-app/core'
+import { type EventSuffix, emitter, type GridEvent, type NodeEvent } from '@pascal-app/core'
 
 /**
  * Typed wrappers over the core `emitter` for node-kind events whose key is

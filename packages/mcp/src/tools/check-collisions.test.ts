@@ -52,7 +52,9 @@ describe('check_collisions', () => {
       name: 'check_collisions',
       arguments: {},
     })
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.collisions.length).toBeGreaterThanOrEqual(1)
     const ids = parsed.collisions.flatMap((c: { aId: string; bId: string }) => [c.aId, c.bId])
     expect(ids).toContain(a.id)
@@ -75,7 +77,9 @@ describe('check_collisions', () => {
       name: 'check_collisions',
       arguments: {},
     })
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.collisions.length).toBe(0)
   })
 
@@ -85,7 +89,9 @@ describe('check_collisions', () => {
       arguments: { levelId: 'level_missing' },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(Array.isArray(parsed.collisions)).toBe(true)
   })
 })

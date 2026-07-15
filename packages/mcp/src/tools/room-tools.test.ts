@@ -28,7 +28,9 @@ describe('room tools', () => {
       arguments: { query: 'sofa' },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.total).toBeGreaterThan(0)
     expect(parsed.results.map((item: { id: string }) => item.id)).toContain('sofa')
   })
@@ -50,7 +52,9 @@ describe('room tools', () => {
       },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.zoneId).toMatch(/^zone_/)
     expect(parsed.slabId).toMatch(/^slab_/)
     expect(parsed.ceilingId).toMatch(/^ceiling_/)
@@ -102,14 +106,18 @@ describe('room tools', () => {
         ],
       },
     })
-    const room = JSON.parse((roomResult.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const room = JSON.parse(
+      (roomResult.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     const wallId = room.wallIds[0]
 
     const doorResult = await client.callTool({
       name: 'add_door',
       arguments: { wallId, t: 0.5 },
     })
-    const door = JSON.parse((doorResult.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const door = JSON.parse(
+      (doorResult.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(door.localX).toBeCloseTo(2.5, 3)
     expect(door.t).toBe(0.5)
     expect(door.position).toBe(0.5)
@@ -123,7 +131,9 @@ describe('room tools', () => {
       name: 'add_window',
       arguments: { wallId, t: 0.25, width: 1, height: 1, sillHeight: 1 },
     })
-    const win = JSON.parse((windowResult.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const win = JSON.parse(
+      (windowResult.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(win.localX).toBeCloseTo(1.25, 3)
     expect(win.t).toBe(0.25)
     expect(win.position).toBe(0.25)
@@ -150,14 +160,18 @@ describe('room tools', () => {
         ],
       },
     })
-    const room = JSON.parse((roomResult.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const room = JSON.parse(
+      (roomResult.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     const wallId = room.wallIds[0]
 
     const doorResult = await client.callTool({
       name: 'add_door',
       arguments: { wallId, position: 0.25 },
     })
-    const door = JSON.parse((doorResult.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const door = JSON.parse(
+      (doorResult.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(door.localX).toBeCloseTo(1.5, 3)
     expect(door.t).toBe(0.25)
 
@@ -165,7 +179,9 @@ describe('room tools', () => {
       name: 'add_window',
       arguments: { wallId, position: 0.75, width: 1 },
     })
-    const win = JSON.parse((windowResult.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const win = JSON.parse(
+      (windowResult.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(win.localX).toBeCloseTo(4.5, 3)
     expect(win.t).toBe(0.75)
     expect(bridge.validateScene().valid).toBe(true)
@@ -189,7 +205,9 @@ describe('room tools', () => {
       },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.placed).toBeGreaterThan(0)
     for (const itemId of parsed.itemIds) {
       expect(bridge.getNode(itemId)?.parentId).toBe(level.id)
@@ -213,7 +231,9 @@ describe('room tools', () => {
         ],
       },
     })
-    const room = JSON.parse((roomResult.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const room = JSON.parse(
+      (roomResult.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     const result = await client.callTool({
       name: 'furnish_room',
       arguments: {
@@ -223,7 +243,9 @@ describe('room tools', () => {
       },
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.placed).toBeGreaterThan(0)
     for (const itemId of parsed.itemIds) {
       expect(bridge.getNode(itemId)?.parentId).toBe(level.id)

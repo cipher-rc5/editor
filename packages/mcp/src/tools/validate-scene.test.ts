@@ -27,7 +27,9 @@ describe('validate_scene', () => {
       arguments: {},
     })
     expect(result.isError).toBeFalsy()
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     expect(parsed.valid).toBe(true)
     expect(Array.isArray(parsed.errors)).toBe(true)
   })
@@ -37,7 +39,9 @@ describe('validate_scene', () => {
       name: 'validate_scene',
       arguments: {},
     })
-    const parsed = JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? '')
+    const parsed = JSON.parse(
+      (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '',
+    )
     for (const err of parsed.errors) {
       expect(typeof err.nodeId).toBe('string')
       expect(typeof err.path).toBe('string')
