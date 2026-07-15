@@ -1,5 +1,5 @@
-import dedent from 'dedent'
 import { z } from 'zod'
+import dedent from '../../lib/dedent'
 import { SolarPanelPresetKey } from '../../solar-panel-presets'
 import { BaseNode, nodeType, objectId } from '../base'
 import { MaterialSchema } from '../material'

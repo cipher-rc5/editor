@@ -15,10 +15,10 @@ Public, open-source home of `@pascal-app/{core,viewer,editor,mcp}` and the stand
 ## Where to look
 
 - **Architecture rules** — `wiki/architecture/` (read on demand; index in `wiki/architecture/README.md`).
-- **Skills (ready workflows)** — `.agents/skills/<name>/SKILL.md`. Same content is reachable as `.claude/skills/`, `.cursor/skills/`, `.codex/skills/` (symlinks to `.agents/skills/`).
+- **Skills (ready workflows)** — `.agents/skills/<name>/SKILL.md`. Same content is reachable as `.claude/skills/` (a symlink to `.agents/skills/`).
 - **Repo orientation for humans** — `README.md`, `SETUP.md`, `CONTRIBUTING.md`.
 
-`CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md` are symlinks to this file. Codex reads this file directly.
+`CLAUDE.md` is a symlink to this file.
 
 ## Layer Boundaries (read once, internalise)
 

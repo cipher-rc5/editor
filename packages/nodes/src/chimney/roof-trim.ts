@@ -105,7 +105,6 @@ export function trimChimneyBodyAgainstRoof(
 
     result = out
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.error('[chimney] roof-trim CSG failed:', e)
     indexed.dispose()
     result = body

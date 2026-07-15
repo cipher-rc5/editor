@@ -1,4 +1,4 @@
-import dedent from 'dedent'
+import dedent from '../../lib/dedent'
 import { z } from 'zod'
 import { BaseNode, nodeType, objectId } from '../base'
 import { MaterialSchema } from '../material'

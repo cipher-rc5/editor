@@ -95,6 +95,60 @@ function generateId<T extends string>(prefix: T): `${T}_${string}` {
   return `${prefix}_${nanoid()}` as `${T}_${string}`
 }
 
+// web-ifc's `GetLine` returns `any` (see web-ifc-api.d.ts): the parsed IFC
+// entities are deeply nested/polymorphic and have no upstream type. We model
+// an entity as a loose indexable record so property access stays ergonomic
+// while keeping the escape hatch honest — values are `unknown` and narrowed
+// through the guards below rather than blindly dereferenced.
+type IfcLine = Record<string, unknown>
+
+// Most IFC attributes are wrapped in a `{ value: T }` box (e.g. an
+// IfcLengthMeasure, a reference, a label). This guard narrows to that shape
+// before `.value` is read.
+interface IfcValue {
+  value: unknown
+}
+
+function isIfcValue(v: unknown): v is IfcValue {
+  return typeof v === 'object' && v !== null && 'value' in v
+}
+
+// A boxed reference to another IFC line — its `.value` is the referenced
+// express ID. IFC relationship attributes (RelatedObjects, HasProperties, …)
+// are arrays of these.
+interface IfcRef {
+  value: number
+}
+
+// Reads a numeric coordinate/ratio component. Components come through either
+// as a bare number or as an IfcReal-style `{ value: number }` box.
+function num(v: unknown): number | undefined {
+  if (typeof v === 'number') return v
+  if (isIfcValue(v) && typeof v.value === 'number') return v.value
+  return undefined
+}
+
+// Reads a coordinate component, defaulting to 0 — the geometry helpers treat
+// missing components as the origin.
+function coord(v: unknown): number {
+  return num(v) ?? 0
+}
+
+// Pulls the boxed `.value` off an IFC attribute, or `undefined` when the
+// attribute is absent/unboxed.
+function valueOf(v: unknown): unknown {
+  return isIfcValue(v) ? v.value : undefined
+}
+
+// Reads a boxed entity reference — the `.value` of an IFC attribute that
+// points at another line — as an express ID, or `null` when the attribute is
+// absent or doesn't carry a numeric reference. Use this before feeding an ID
+// back into `ifcApi.GetLine`.
+function refOf(v: unknown): number | null {
+  const inner = valueOf(v)
+  return typeof inner === 'number' ? inner : null
+}
+
 // --- Unit detection ---
 
 function getLengthUnitFactor(ifcApi: WebIFC.IfcAPI, modelID: number): number {
@@ -191,21 +245,15 @@ function buildAxis2Placement3DMatrix(
   modelID: number,
   axis2Id: number,
 ): Mat4 {
-  const axis2 = ifcApi.GetLine(modelID, axis2Id)
-
-  const num = (v: any): number | undefined => {
-    if (v == null) return undefined
-    if (typeof v === 'number') return v
-    if (v.value != null) return v.value
-    return undefined
-  }
+  const axis2: IfcLine = ifcApi.GetLine(modelID, axis2Id)
 
   let ox = 0,
     oy = 0,
     oz = 0
-  if (axis2.Location?.value) {
-    const loc = ifcApi.GetLine(modelID, axis2.Location.value)
-    const coords = loc.Coordinates.map((c: any) => num(c))
+  const locId = refOf(axis2.Location)
+  if (locId != null) {
+    const loc: IfcLine = ifcApi.GetLine(modelID, locId)
+    const coords = (loc.Coordinates as unknown[]).map(num)
     ox = coords[0] ?? 0
     oy = coords[1] ?? 0
     oz = coords[2] ?? 0
@@ -215,9 +263,10 @@ function buildAxis2Placement3DMatrix(
   let zx = 0,
     zy = 0,
     zz = 1
-  if (axis2.Axis?.value) {
-    const ax = ifcApi.GetLine(modelID, axis2.Axis.value)
-    const d = ax.DirectionRatios.map((c: any) => num(c))
+  const axisId = refOf(axis2.Axis)
+  if (axisId != null) {
+    const ax: IfcLine = ifcApi.GetLine(modelID, axisId)
+    const d = (ax.DirectionRatios as unknown[]).map(num)
     if (d[0] != null) {
       zx = d[0]
       zy = d[1] ?? 0
@@ -229,9 +278,10 @@ function buildAxis2Placement3DMatrix(
   let xx = 1,
     xy = 0,
     xz = 0
-  if (axis2.RefDirection?.value) {
-    const rd = ifcApi.GetLine(modelID, axis2.RefDirection.value)
-    const d = rd.DirectionRatios.map((c: any) => num(c))
+  const refDirId = refOf(axis2.RefDirection)
+  if (refDirId != null) {
+    const rd: IfcLine = ifcApi.GetLine(modelID, refDirId)
+    const d = (rd.DirectionRatios as unknown[]).map(num)
     if (d[0] != null) {
       xx = d[0]
       xy = d[1] ?? 0
@@ -270,11 +320,13 @@ function resolveWorldTransform(ifcApi: WebIFC.IfcAPI, modelID: number, placement
   let current: number | null = placementId
 
   while (current) {
-    const placement = ifcApi.GetLine(modelID, current)
-    if (placement.RelativePlacement?.value) {
-      chain.push(placement.RelativePlacement.value)
+    const placement: IfcLine = ifcApi.GetLine(modelID, current)
+    const relPlacement = valueOf(placement.RelativePlacement)
+    if (typeof relPlacement === 'number') {
+      chain.push(relPlacement)
     }
-    current = placement.PlacementRelTo?.value ?? null
+    const relTo = valueOf(placement.PlacementRelTo)
+    current = typeof relTo === 'number' ? relTo : null
   }
 
   // Multiply from root to leaf
@@ -288,38 +340,40 @@ function resolveWorldTransform(ifcApi: WebIFC.IfcAPI, modelID: number, placement
 
 // --- Geometry extraction helpers ---
 
-function getAxisPolyline(ifcApi: WebIFC.IfcAPI, modelID: number, element: any): number[][] | null {
+function getAxisPolyline(
+  ifcApi: WebIFC.IfcAPI,
+  modelID: number,
+  element: IfcLine,
+): number[][] | null {
   try {
-    if (!element.Representation?.value) return null
-    const prodRep = ifcApi.GetLine(modelID, element.Representation.value)
-    for (const repRef of prodRep.Representations) {
-      const rep = ifcApi.GetLine(modelID, repRef.value)
-      if (rep.RepresentationIdentifier?.value !== 'Axis') continue
-      for (const itemRef of rep.Items) {
-        const item = ifcApi.GetLine(modelID, itemRef.value)
+    const repId = refOf(element.Representation)
+    if (repId == null) return null
+    const prodRep: IfcLine = ifcApi.GetLine(modelID, repId)
+    for (const repRef of prodRep.Representations as IfcRef[]) {
+      const rep: IfcLine = ifcApi.GetLine(modelID, repRef.value)
+      if (valueOf(rep.RepresentationIdentifier) !== 'Axis') continue
+      for (const itemRef of rep.Items as IfcRef[]) {
+        const item: IfcLine = ifcApi.GetLine(modelID, itemRef.value)
 
         // IFCPOLYLINE — Points is an array of CartesianPoint references
         if (Array.isArray(item.Points)) {
           const points: number[][] = []
-          for (const ptRef of item.Points) {
-            const pt = ifcApi.GetLine(modelID, ptRef.value)
-            const coords = pt.Coordinates.map((c: any) =>
-              typeof c === 'number' ? c : (c?.value ?? 0),
-            )
+          for (const ptRef of item.Points as IfcRef[]) {
+            const pt: IfcLine = ifcApi.GetLine(modelID, ptRef.value)
+            const coords = (pt.Coordinates as unknown[]).map(coord)
             points.push([coords[0] ?? 0, coords[1] ?? 0, coords[2] ?? 0])
           }
           if (points.length >= 2) return points
         }
 
         // IFCINDEXEDPOLYCURVE — Points is a reference to a point list entity
-        if (item.Points?.value && !Array.isArray(item.Points)) {
-          const ptList = ifcApi.GetLine(modelID, item.Points.value)
+        const pointsId = refOf(item.Points)
+        if (pointsId != null && !Array.isArray(item.Points)) {
+          const ptList: IfcLine = ifcApi.GetLine(modelID, pointsId)
           if (ptList.CoordList) {
             const points: number[][] = []
-            for (const coords of ptList.CoordList) {
-              const c = Array.isArray(coords)
-                ? coords.map((v: any) => (typeof v === 'number' ? v : (v?.value ?? 0)))
-                : []
+            for (const coords of ptList.CoordList as unknown[]) {
+              const c = Array.isArray(coords) ? coords.map(coord) : []
               points.push([c[0] ?? 0, c[1] ?? 0, c[2] ?? 0])
             }
             if (points.length >= 2) return points
@@ -328,16 +382,15 @@ function getAxisPolyline(ifcApi: WebIFC.IfcAPI, modelID: number, element: any): 
 
         // IFCGEOMETRICSET — unwrap to find an inner curve
         if (item.Elements) {
-          for (const elemRef of item.Elements) {
-            const inner = ifcApi.GetLine(modelID, elemRef.value)
-            if (inner.Points?.value) {
-              const ptList = ifcApi.GetLine(modelID, inner.Points.value)
+          for (const elemRef of item.Elements as IfcRef[]) {
+            const inner: IfcLine = ifcApi.GetLine(modelID, elemRef.value)
+            const innerPointsId = refOf(inner.Points)
+            if (innerPointsId != null) {
+              const ptList: IfcLine = ifcApi.GetLine(modelID, innerPointsId)
               if (ptList.CoordList) {
                 const points: number[][] = []
-                for (const coords of ptList.CoordList) {
-                  const c = Array.isArray(coords)
-                    ? coords.map((v: any) => (typeof v === 'number' ? v : (v?.value ?? 0)))
-                    : []
+                for (const coords of ptList.CoordList as unknown[]) {
+                  const c = Array.isArray(coords) ? coords.map(coord) : []
                   points.push([c[0] ?? 0, c[1] ?? 0, c[2] ?? 0])
                 }
                 if (points.length >= 2) return points
@@ -367,70 +420,70 @@ type ExtrusionData = {
 function extractFromExtrusionItem(
   ifcApi: WebIFC.IfcAPI,
   modelID: number,
-  item: any,
+  item: IfcLine,
   result: ExtrusionData,
 ): boolean {
   // Unwrap BooleanClippingResult → follow FirstOperand chain to find extrusion
-  let current = item
+  let current: IfcLine = item
   for (let guard = 0; guard < 10; guard++) {
-    if (current.Depth?.value) break
-    if (current.FirstOperand?.value) {
-      current = ifcApi.GetLine(modelID, current.FirstOperand.value)
+    if (num(current.Depth)) break
+    const firstOperandId = refOf(current.FirstOperand)
+    if (firstOperandId != null) {
+      current = ifcApi.GetLine(modelID, firstOperandId)
     } else {
       break
     }
   }
 
-  if (current.Depth?.value) {
-    result.depth = current.Depth.value
+  const depth = num(current.Depth)
+  if (depth) {
+    result.depth = depth
   }
 
-  if (current.SweptArea?.value) {
-    const profile = ifcApi.GetLine(modelID, current.SweptArea.value)
+  const sweptAreaId = refOf(current.SweptArea)
+  if (sweptAreaId != null) {
+    const profile: IfcLine = ifcApi.GetLine(modelID, sweptAreaId)
 
     // Detect the profile shape by the fields present rather than the IFC
     // type id — robust across web-ifc versions. IfcCircleProfileDef has a
     // Radius; IfcRectangleProfileDef has XDim/YDim.
-    if (profile.Radius?.value != null) {
+    const radius = num(profile.Radius)
+    if (radius != null) {
       result.profileShape = 'round'
-      result.radius = profile.Radius.value
+      result.radius = radius
     }
 
-    if (profile.XDim?.value) {
-      result.xDim = profile.XDim.value
-      result.yDim = profile.YDim?.value ?? null
+    const xDim = num(profile.XDim)
+    if (xDim) {
+      result.xDim = xDim
+      result.yDim = num(profile.YDim) ?? null
       if (result.profileShape === null) result.profileShape = 'rectangular'
     }
 
     // Extract profile points — OuterCurve for ArbitraryClosedProfileDef
-    const curveRef = profile.OuterCurve?.value
-    if (curveRef) {
-      const curve = ifcApi.GetLine(modelID, curveRef)
+    const curveRef = refOf(profile.OuterCurve)
+    if (curveRef != null) {
+      const curve: IfcLine = ifcApi.GetLine(modelID, curveRef)
       if (curve.Points) {
         const pts: number[][] = []
         // IFCPOLYLINE — Points is array of CartesianPoint refs
-        if (
-          Array.isArray(curve.Points) &&
-          curve.Points.length > 0 &&
-          curve.Points[0]?.value != null
-        ) {
-          for (const ptRef of curve.Points) {
-            const pt = ifcApi.GetLine(modelID, ptRef.value)
-            const coords = pt.Coordinates.map((c: any) =>
-              typeof c === 'number' ? c : (c?.value ?? 0),
-            )
+        if (Array.isArray(curve.Points) && curve.Points.length > 0 && isIfcValue(curve.Points[0])) {
+          for (const ptRef of curve.Points as IfcRef[]) {
+            const pt: IfcLine = ifcApi.GetLine(modelID, ptRef.value)
+            const coords = (pt.Coordinates as unknown[]).map(coord)
             pts.push([coords[0] ?? 0, coords[1] ?? 0])
           }
         }
         // IFCINDEXEDPOLYCURVE — Points is a reference to a point list
-        else if (curve.Points?.value) {
-          const ptList = ifcApi.GetLine(modelID, curve.Points.value)
-          if (ptList.CoordList) {
-            for (const coords of ptList.CoordList) {
-              const c = Array.isArray(coords)
-                ? coords.map((v: any) => (typeof v === 'number' ? v : (v?.value ?? 0)))
-                : []
-              pts.push([c[0] ?? 0, c[1] ?? 0])
+        else {
+          const curvePointsId = refOf(curve.Points)
+          if (curvePointsId != null) {
+            const ptList: IfcLine = ifcApi.GetLine(modelID, curvePointsId)
+            if (ptList.CoordList) {
+              for (const coords of ptList.CoordList as unknown[]) {
+                const c = Array.isArray(coords) ? coords.map(coord) : []
+                pts.push([c[0] ?? 0, c[1] ?? 0])
+              }
             }
           }
         }
@@ -442,7 +495,11 @@ function extractFromExtrusionItem(
   return result.depth !== null
 }
 
-function getBodyExtrusionData(ifcApi: WebIFC.IfcAPI, modelID: number, element: any): ExtrusionData {
+function getBodyExtrusionData(
+  ifcApi: WebIFC.IfcAPI,
+  modelID: number,
+  element: IfcLine,
+): ExtrusionData {
   const result: ExtrusionData = {
     depth: null,
     xDim: null,
@@ -452,26 +509,29 @@ function getBodyExtrusionData(ifcApi: WebIFC.IfcAPI, modelID: number, element: a
     radius: null,
   }
   try {
-    if (!element.Representation?.value) return result
-    const prodRep = ifcApi.GetLine(modelID, element.Representation.value)
-    for (const repRef of prodRep.Representations) {
-      const rep = ifcApi.GetLine(modelID, repRef.value)
-      if (rep.RepresentationIdentifier?.value !== 'Body') continue
+    const repId = refOf(element.Representation)
+    if (repId == null) return result
+    const prodRep: IfcLine = ifcApi.GetLine(modelID, repId)
+    for (const repRef of prodRep.Representations as IfcRef[]) {
+      const rep: IfcLine = ifcApi.GetLine(modelID, repRef.value)
+      if (valueOf(rep.RepresentationIdentifier) !== 'Body') continue
 
-      for (const itemRef of rep.Items) {
-        const item = ifcApi.GetLine(modelID, itemRef.value)
+      for (const itemRef of rep.Items as IfcRef[]) {
+        const item: IfcLine = ifcApi.GetLine(modelID, itemRef.value)
 
         // Direct extrusion or BooleanClippingResult
         if (extractFromExtrusionItem(ifcApi, modelID, item, result)) return result
 
         // MappedRepresentation → unwrap to inner items
-        if (item.MappingSource?.value) {
-          const src = ifcApi.GetLine(modelID, item.MappingSource.value)
-          if (src.MappedRepresentation?.value) {
-            const mapped = ifcApi.GetLine(modelID, src.MappedRepresentation.value)
+        const mappingSourceId = refOf(item.MappingSource)
+        if (mappingSourceId != null) {
+          const src: IfcLine = ifcApi.GetLine(modelID, mappingSourceId)
+          const mappedRepId = refOf(src.MappedRepresentation)
+          if (mappedRepId != null) {
+            const mapped: IfcLine = ifcApi.GetLine(modelID, mappedRepId)
             if (mapped.Items) {
-              for (const mItemRef of mapped.Items) {
-                const mItem = ifcApi.GetLine(modelID, mItemRef.value)
+              for (const mItemRef of mapped.Items as IfcRef[]) {
+                const mItem: IfcLine = ifcApi.GetLine(modelID, mItemRef.value)
                 if (extractFromExtrusionItem(ifcApi, modelID, mItem, result)) return result
               }
             }
@@ -485,14 +545,16 @@ function getBodyExtrusionData(ifcApi: WebIFC.IfcAPI, modelID: number, element: a
   return result
 }
 
-function findExtrusionPosition(ifcApi: WebIFC.IfcAPI, modelID: number, item: any): Mat4 | null {
-  let current = item
+function findExtrusionPosition(ifcApi: WebIFC.IfcAPI, modelID: number, item: IfcLine): Mat4 | null {
+  let current: IfcLine = item
   for (let guard = 0; guard < 10; guard++) {
-    if (current.Position?.value) {
-      return buildAxis2Placement3DMatrix(ifcApi, modelID, current.Position.value)
+    const positionId = refOf(current.Position)
+    if (positionId != null) {
+      return buildAxis2Placement3DMatrix(ifcApi, modelID, positionId)
     }
-    if (current.FirstOperand?.value) {
-      current = ifcApi.GetLine(modelID, current.FirstOperand.value)
+    const firstOperandId = refOf(current.FirstOperand)
+    if (firstOperandId != null) {
+      current = ifcApi.GetLine(modelID, firstOperandId)
     } else {
       break
     }
@@ -603,25 +665,32 @@ function wallHeightThicknessFromExtents(
   return null
 }
 
-function getExtrusionPosition(ifcApi: WebIFC.IfcAPI, modelID: number, element: any): Mat4 | null {
+function getExtrusionPosition(
+  ifcApi: WebIFC.IfcAPI,
+  modelID: number,
+  element: IfcLine,
+): Mat4 | null {
   try {
-    if (!element.Representation?.value) return null
-    const prodRep = ifcApi.GetLine(modelID, element.Representation.value)
-    for (const repRef of prodRep.Representations) {
-      const rep = ifcApi.GetLine(modelID, repRef.value)
-      if (rep.RepresentationIdentifier?.value !== 'Body') continue
-      for (const itemRef of rep.Items) {
-        const item = ifcApi.GetLine(modelID, itemRef.value)
+    const repId = refOf(element.Representation)
+    if (repId == null) return null
+    const prodRep: IfcLine = ifcApi.GetLine(modelID, repId)
+    for (const repRef of prodRep.Representations as IfcRef[]) {
+      const rep: IfcLine = ifcApi.GetLine(modelID, repRef.value)
+      if (valueOf(rep.RepresentationIdentifier) !== 'Body') continue
+      for (const itemRef of rep.Items as IfcRef[]) {
+        const item: IfcLine = ifcApi.GetLine(modelID, itemRef.value)
         const pos = findExtrusionPosition(ifcApi, modelID, item)
         if (pos) return pos
 
-        if (item.MappingSource?.value) {
-          const src = ifcApi.GetLine(modelID, item.MappingSource.value)
-          if (src.MappedRepresentation?.value) {
-            const mapped = ifcApi.GetLine(modelID, src.MappedRepresentation.value)
+        const mappingSourceId = refOf(item.MappingSource)
+        if (mappingSourceId != null) {
+          const src: IfcLine = ifcApi.GetLine(modelID, mappingSourceId)
+          const mappedRepId = refOf(src.MappedRepresentation)
+          if (mappedRepId != null) {
+            const mapped: IfcLine = ifcApi.GetLine(modelID, mappedRepId)
             if (mapped.Items) {
-              for (const mItemRef of mapped.Items) {
-                const mItem = ifcApi.GetLine(modelID, mItemRef.value)
+              for (const mItemRef of mapped.Items as IfcRef[]) {
+                const mItem: IfcLine = ifcApi.GetLine(modelID, mItemRef.value)
                 const mPos = findExtrusionPosition(ifcApi, modelID, mItem)
                 if (mPos) return mPos
               }
@@ -747,7 +816,7 @@ export async function convertIfcToPascal(
 
     if (rel.RelatingObject && rel.RelatedObjects) {
       const parentExpressID = rel.RelatingObject.value
-      const children = rel.RelatedObjects.map((obj: any) => obj.value)
+      const children = (rel.RelatedObjects as IfcRef[]).map((obj) => obj.value)
 
       children.forEach((childID: number) => {
         parentMap.set(childID, parentExpressID)
@@ -769,7 +838,7 @@ export async function convertIfcToPascal(
 
     if (rel.RelatingStructure && rel.RelatedElements) {
       const parentExpressID = rel.RelatingStructure.value
-      const children = rel.RelatedElements.map((obj: any) => obj.value)
+      const children = (rel.RelatedElements as IfcRef[]).map((obj) => obj.value)
 
       children.forEach((childID: number) => {
         parentMap.set(childID, parentExpressID)
@@ -869,7 +938,7 @@ export async function convertIfcToPascal(
     nodes[nodeId] = buildingNode
 
     if (parentNodeId && nodes[parentNodeId]) {
-      ;(nodes[parentNodeId] as any).children?.push(nodeId)
+      ;(nodes[parentNodeId] as { children?: string[] }).children?.push(nodeId)
     }
   }
 
@@ -921,7 +990,7 @@ export async function convertIfcToPascal(
     nodes[nodeId] = levelNode
 
     if (parentNodeId && nodes[parentNodeId]) {
-      ;(nodes[parentNodeId] as any).children?.push(nodeId)
+      ;(nodes[parentNodeId] as { children?: string[] }).children?.push(nodeId)
     }
   }
 
@@ -1101,7 +1170,7 @@ export async function convertIfcToPascal(
       nodes[nodeId] = wallNode
 
       if (parentNodeId && nodes[parentNodeId]) {
-        ;(nodes[parentNodeId] as any).children?.push(nodeId)
+        ;(nodes[parentNodeId] as { children?: string[] }).children?.push(nodeId)
       }
     }
   }
@@ -1111,7 +1180,7 @@ export async function convertIfcToPascal(
     const wallNodeId = expressIdToNodeId.get(wallExpressID)
     if (!wallNodeId) continue
     const wallNode = nodes[wallNodeId] as WallNode
-    if (!wallNode || wallNode.type !== 'wall') continue
+    if (wallNode?.type !== 'wall') continue
 
     const wallDx = wallNode.end[0] - wallNode.start[0]
     const wallDy = wallNode.end[1] - wallNode.start[1]
@@ -1288,7 +1357,7 @@ export async function convertIfcToPascal(
   const wallInfos: WallInfo[] = []
   for (const [wallExpressId, wallNodeId] of expressIdToNodeId) {
     const node = nodes[wallNodeId]
-    if (!node || node.type !== 'wall') continue
+    if (node?.type !== 'wall') continue
     const w = node as WallNode
     const length = Math.hypot(w.end[0] - w.start[0], w.end[1] - w.start[1])
     if (length < 1e-6) continue
@@ -1538,7 +1607,7 @@ export async function convertIfcToPascal(
     nodes[nodeId] = slabNode
 
     if (parentNodeId && nodes[parentNodeId]) {
-      ;(nodes[parentNodeId] as any).children?.push(nodeId)
+      ;(nodes[parentNodeId] as { children?: string[] }).children?.push(nodeId)
     }
   }
 
@@ -1643,7 +1712,7 @@ export async function convertIfcToPascal(
 
     nodes[nodeId] = stairNode
     if (parentNodeId && nodes[parentNodeId]) {
-      ;(nodes[parentNodeId] as any).children?.push(nodeId)
+      ;(nodes[parentNodeId] as { children?: string[] }).children?.push(nodeId)
     }
   }
 
@@ -1733,7 +1802,7 @@ export async function convertIfcToPascal(
 
     nodes[nodeId] = roofNode
     if (parentNodeId && nodes[parentNodeId]) {
-      ;(nodes[parentNodeId] as any).children?.push(nodeId)
+      ;(nodes[parentNodeId] as { children?: string[] }).children?.push(nodeId)
     }
   }
 
@@ -1837,7 +1906,7 @@ export async function convertIfcToPascal(
 
       nodes[nodeId] = columnNode
       if (parentNodeId && nodes[parentNodeId]) {
-        ;(nodes[parentNodeId] as any).children?.push(nodeId)
+        ;(nodes[parentNodeId] as { children?: string[] }).children?.push(nodeId)
       }
     }
   }
@@ -1991,7 +2060,7 @@ export async function convertIfcToPascal(
         let materialName: string | null = null
         const layers: { name: string; thickness?: number }[] = []
 
-        const extractLayers = (layersArr: any[]) => {
+        const extractLayers = (layersArr: IfcRef[]) => {
           for (const lRef of layersArr) {
             try {
               const layer = ifcApi.GetLine(modelID, lRef.value)

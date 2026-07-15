@@ -1,7 +1,7 @@
 // lib/scenegraph/schema/nodes/site.ts
 
-import dedent from 'dedent'
 import { z } from 'zod'
+import dedent from '../../lib/dedent'
 import { BaseNode, nodeType, objectId } from '../base'
 
 // 2D Polygon

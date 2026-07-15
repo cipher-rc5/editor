@@ -53,7 +53,8 @@
         "noConsole": "off",
         "noArrayIndexKey": "off",
         "noEvolvingTypes": "off",
-        "noDocumentCookie": "off"
+        "noDocumentCookie": "off",
+        "noShadow": "off"
       },
       "complexity": {
         "noExcessiveCognitiveComplexity": "off",
@@ -80,9 +81,6 @@
         "noStaticElementInteractions": "off",
         "noNoninteractiveElementInteractions": "off",
         "useButtonType": "off"
-      },
-      "nursery": {
-        "noShadow": "off"
       },
       "security": {
         "noDangerouslySetInnerHtml": "info"

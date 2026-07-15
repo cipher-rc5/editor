@@ -296,7 +296,7 @@ export function generateFenceGeometry(fence: FenceNode) {
 
 function updateFenceGeometry(fenceId: FenceNode['id']) {
   const node = useScene.getState().nodes[fenceId]
-  if (!node || node.type !== 'fence') return
+  if (node?.type !== 'fence') return
 
   const mesh = sceneRegistry.nodes.get(fenceId) as THREE.Mesh | undefined
   if (!mesh) return
@@ -318,7 +318,7 @@ export const FenceSystem = () => {
     const nodes = useScene.getState().nodes
     dirtyNodes.forEach((id) => {
       const node = nodes[id]
-      if (!node || node.type !== 'fence') return
+      if (node?.type !== 'fence') return
       updateFenceGeometry(id as FenceNode['id'])
       clearDirty(id as AnyNodeId)
     })

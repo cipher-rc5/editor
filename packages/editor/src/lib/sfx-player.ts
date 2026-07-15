@@ -1,4 +1,3 @@
-import { Howl } from 'howler'
 import useAudio from '../store/use-audio'
 
 // Per-sound variation config. Playback rate also shifts pitch (one semitone ≈ 1.0595×),
@@ -108,36 +107,74 @@ function randomInRange([min, max]: [number, number]): number {
   return min + Math.random() * (max - min)
 }
 
-// Preload all SFX sounds. Each variation gets its own Howl so they can overlap
-// and be cycled round-robin.
-const sfxCache = new Map<SFXName, Howl[]>()
 const lastPlayedAt = new Map<SFXName, number>()
 const lastVariation = new Map<SFXName, number>()
 
-// Initialize all sounds
-Object.entries(SFX).forEach(([name, config]) => {
+// Native Web Audio replaces the previous howler backend. The graph is created
+// lazily — browsers block audio until a user gesture, and the first playSFX
+// call always originates from one (a tool click / placement). Each sound may
+// carry several pre-rendered variations, so buffers are cached per-variation
+// and cycled round-robin at play time.
+let audioContext: AudioContext | null = null
+const bufferCache = new Map<SFXName, AudioBuffer[]>()
+const bufferLoads = new Map<SFXName, Promise<AudioBuffer[] | null>>()
+
+function getAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined' || typeof AudioContext === 'undefined') {
+    return null
+  }
+  if (!audioContext) {
+    audioContext = new AudioContext()
+    // Warm the decode cache once a context exists so later plays are instant.
+    for (const name of Object.keys(SFX) as SFXName[]) {
+      void loadBuffers(name)
+    }
+  }
+  if (audioContext.state === 'suspended') {
+    void audioContext.resume()
+  }
+  return audioContext
+}
+
+function loadBuffers(name: SFXName): Promise<AudioBuffer[] | null> {
+  const cached = bufferCache.get(name)
+  if (cached) return Promise.resolve(cached)
+  const inFlight = bufferLoads.get(name)
+  if (inFlight) return inFlight
+
+  const ctx = audioContext
+  const config = SFX[name]
+  if (!ctx || !config) return Promise.resolve(null)
+
   const sources = Array.isArray(config.src) ? config.src : [config.src]
-  const sounds = sources.map(
-    (src) =>
-      new Howl({
-        src: [src],
-        preload: true,
-        volume: 0.5, // Will be adjusted by the bus
-      }),
+  const load = Promise.all(
+    sources.map((src) =>
+      fetch(src)
+        .then((res) => res.arrayBuffer())
+        .then((data) => ctx.decodeAudioData(data)),
+    ),
   )
-  sfxCache.set(name as SFXName, sounds)
-})
+    .then((buffers) => {
+      bufferCache.set(name, buffers)
+      return buffers
+    })
+    .catch((err: unknown) => {
+      console.warn(`SFX failed to load: ${name}`, err)
+      return null
+    })
+  bufferLoads.set(name, load)
+  return load
+}
 
 /**
  * Play a sound effect with volume based on audio settings
  */
 export function playSFX(name: SFXName) {
-  const sounds = sfxCache.get(name)
-  if (!sounds || sounds.length === 0) {
+  const config = SFX[name]
+  if (!config) {
     console.warn(`SFX not found: ${name}`)
     return
   }
-  const config = SFX[name]!
 
   // Drop rapid repeats — two plays of the same SFX within minIntervalMs just
   // smear into noise, they don't add useful information.
@@ -147,45 +184,57 @@ export function playSFX(name: SFXName) {
   if (last !== undefined && now - last < minInterval) return
   lastPlayedAt.set(name, now)
 
-  // Pick a random variation, avoiding an immediate repeat of the last one so
-  // consecutive plays don't land on the same file.
-  let index = Math.floor(Math.random() * sounds.length)
-  if (sounds.length > 1 && index === lastVariation.get(name)) {
-    index = (index + 1) % sounds.length
-  }
-  lastVariation.set(name, index)
-  const sound = sounds[index]!
-
   const { masterVolume, sfxVolume, muted } = useAudio.getState()
-
   if (muted) return
+
+  const ctx = getAudioContext()
+  if (!ctx) return
 
   // Calculate final volume (masterVolume and sfxVolume are 0-100)
   const baseVolume = (masterVolume / 100) * (sfxVolume / 100)
   const volumeJitter = config.volumeRange ? randomInRange(config.volumeRange) : 1
   const rate = config.rateRange ? randomInRange(config.rateRange) : 1
+  const pan = config.panJitter ? (Math.random() * 2 - 1) * config.panJitter : 0
 
-  // Apply per-play variation using the returned sound id so overlapping plays
-  // don't fight over shared properties on the Howl.
-  const id = sound.play()
-  sound.volume(baseVolume * volumeJitter, id)
-  if (rate !== 1) sound.rate(rate, id)
-  if (config.panJitter) {
-    const pan = (Math.random() * 2 - 1) * config.panJitter
-    sound.stereo(pan, id)
-  }
+  void loadBuffers(name).then((buffers) => {
+    if (!buffers || buffers.length === 0) return
+
+    // Pick a random variation, avoiding an immediate repeat of the last one so
+    // consecutive plays don't land on the same file.
+    let index = Math.floor(Math.random() * buffers.length)
+    if (buffers.length > 1 && index === lastVariation.get(name)) {
+      index = (index + 1) % buffers.length
+    }
+    lastVariation.set(name, index)
+    const buffer = buffers[index]
+    if (!buffer) return
+
+    // Fresh nodes per play so overlapping triggers don't fight over shared
+    // state (this is what howler's voice pooling did for us before).
+    const source = ctx.createBufferSource()
+    source.buffer = buffer
+    // playbackRate shifts pitch too, matching the previous howler `rate`.
+    source.playbackRate.value = rate
+
+    const gain = ctx.createGain()
+    gain.gain.value = baseVolume * volumeJitter
+
+    if (pan !== 0 && typeof ctx.createStereoPanner === 'function') {
+      const panner = ctx.createStereoPanner()
+      panner.pan.value = pan
+      source.connect(panner).connect(gain).connect(ctx.destination)
+    } else {
+      source.connect(gain).connect(ctx.destination)
+    }
+
+    source.start()
+  })
 }
 
 /**
- * Update all cached SFX volumes (useful when settings change)
+ * Retained for API compatibility. Volume is now read from the audio store on
+ * every play, so there is no cached per-sound volume left to update.
  */
 export function updateSFXVolumes() {
-  const { masterVolume, sfxVolume } = useAudio.getState()
-  const finalVolume = (masterVolume / 100) * (sfxVolume / 100)
-
-  sfxCache.forEach((sounds) => {
-    sounds.forEach((sound) => {
-      sound.volume(finalVolume)
-    })
-  })
+  // no-op
 }

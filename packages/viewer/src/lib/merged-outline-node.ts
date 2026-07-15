@@ -55,7 +55,7 @@ const _quadMesh = new QuadMesh()
 const _size = new Vector2()
 const _BLUR_X = new Vector2(1.0, 0.0)
 const _BLUR_Y = new Vector2(0.0, 1.0)
-let _rendererState: any // eslint-disable-line @typescript-eslint/no-explicit-any
+let _rendererState: any
 
 // ---------------------------------------------------------------------------
 // Helper: render targets for one outline group

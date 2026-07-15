@@ -1,5 +1,5 @@
-import dedent from 'dedent'
 import { z } from 'zod'
+import dedent from '../../lib/dedent'
 import { AssetUrl } from '../asset-url'
 import { BaseNode, nodeType, objectId } from '../base'
 import type { CollectionId } from '../collections'

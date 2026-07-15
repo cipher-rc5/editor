@@ -349,7 +349,6 @@ function subtractCutters(base: THREE.BufferGeometry, cutters: Brush[]): THREE.Bu
     if (current !== baseBrush) current.geometry.dispose()
     return out
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.error('[chimney] hole carve CSG failed:', e)
     indexed.dispose()
     for (const b of intermediates) b.geometry.dispose()
