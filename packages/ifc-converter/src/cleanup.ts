@@ -225,11 +225,14 @@ function wallsCanMerge(a: WallSegment, b: WallSegment, maxJoinGap: number) {
 
 function find(parent: number[], index: number): number {
   let current = index
-  while (parent[current] !== current) {
-    parent[current] = parent[parent[current]]
-    current = parent[current]
+  while (true) {
+    const next = parent[current]
+    if (next === undefined || next === current) return current
+    // Path halving: point current at its grandparent, then advance.
+    const grandparent = parent[next]
+    if (grandparent !== undefined) parent[current] = grandparent
+    current = next
   }
-  return current
 }
 
 function union(parent: number[], a: number, b: number) {
@@ -285,13 +288,17 @@ function pointOnLine(segment: WallSegment, t: number, offset: number): [number, 
   ]
 }
 
-function chooseKeptSegment(cluster: WallSegment[]) {
-  return cluster.reduce((best, current) => {
+function chooseKeptSegment(cluster: WallSegment[]): WallSegment {
+  const [first, ...rest] = cluster
+  if (!first) {
+    throw new Error('chooseKeptSegment requires a non-empty cluster')
+  }
+  return rest.reduce((best, current) => {
     if (current.wall.children.length !== best.wall.children.length) {
       return current.wall.children.length > best.wall.children.length ? current : best
     }
     return current.length > best.length ? current : best
-  }, cluster[0])
+  }, first)
 }
 
 function collectOpeningIdsForWalls(nodes: SceneNodes, wallIds: Set<string>) {
@@ -422,8 +429,12 @@ function mergeWallFragments(
     const parent = group.map((_, index) => index)
 
     for (let i = 0; i < group.length; i++) {
+      const a = group[i]
+      if (!a) continue
       for (let j = i + 1; j < group.length; j++) {
-        if (wallsCanMerge(group[i], group[j], options.maxWallJoinGap)) {
+        const b = group[j]
+        if (!b) continue
+        if (wallsCanMerge(a, b, options.maxWallJoinGap)) {
           union(parent, i, j)
         }
       }
@@ -431,10 +442,12 @@ function mergeWallFragments(
 
     const clusters = new Map<number, WallSegment[]>()
     for (let i = 0; i < group.length; i++) {
+      const segment = group[i]
+      if (!segment) continue
       const root = find(parent, i)
       const cluster = clusters.get(root)
-      if (cluster) cluster.push(group[i])
-      else clusters.set(root, [group[i]])
+      if (cluster) cluster.push(segment)
+      else clusters.set(root, [segment])
     }
 
     for (const cluster of clusters.values()) {
