@@ -5,11 +5,13 @@ import {
   type SlabNode as SlabNodeType,
   type WallNode,
 } from '../schema'
+import type { AnyNode, AnyNodeId } from '../schema/types'
 import {
   getSceneHistoryPauseDepth,
   pauseSceneHistory,
   resumeSceneHistory,
 } from '../store/history-control'
+import type { SceneState } from '../store/use-scene'
 import {
   getClampedWallCurveOffset,
   getWallCurveFrameAt,
@@ -18,6 +20,23 @@ import {
 import { simplifyClosedPolygon } from './polygon-geometry'
 
 type Point2D = { x: number; y: number }
+
+/** Structural view of the scene store used by space detection. */
+type SceneStoreLike = {
+  getState(): SceneState
+  subscribe(listener: (state: SceneState) => void): () => void
+  temporal: {
+    getState(): { pause(): void; resume(): void }
+  }
+}
+
+/** Structural view of the editor store that owns detected spaces. */
+type SpaceEditorStoreLike = {
+  getState(): {
+    spaces: Record<string, Space>
+    setSpaces(spaces: Record<string, Space>): void
+  }
+}
 
 export type Space = {
   id: string
@@ -28,7 +47,7 @@ export type Space = {
 }
 
 type WallSideUpdate = {
-  wallId: string
+  wallId: WallNode['id']
   frontSide: 'interior' | 'exterior' | 'unknown'
   backSide: 'interior' | 'exterior' | 'unknown'
 }
@@ -633,7 +652,7 @@ function syncAutoSlabsForLevel(
   levelId: string,
   roomPolygons: Point2D[][],
   existingSlabs: SlabNodeType[],
-  sceneStore: any,
+  sceneStore: SceneStoreLike,
 ) {
   const plan = planAutoSlabsForLevel(roomPolygons, existingSlabs)
 
@@ -646,7 +665,9 @@ function syncAutoSlabsForLevel(
   }
 
   if (plan.create.length > 0) {
-    sceneStore.getState().createNodes(plan.create.map((node) => ({ node, parentId: levelId })))
+    sceneStore
+      .getState()
+      .createNodes(plan.create.map((node) => ({ node, parentId: levelId as AnyNodeId })))
   }
 }
 
@@ -654,7 +675,7 @@ function syncAutoCeilingsForLevel(
   levelId: string,
   roomPolygons: Point2D[][],
   existingCeilings: CeilingNodeType[],
-  sceneStore: any,
+  sceneStore: SceneStoreLike,
 ) {
   const manualCeilings = existingCeilings.filter((ceiling) => !ceiling.autoFromWalls)
   const manualSignatures = new Set(
@@ -791,7 +812,9 @@ function syncAutoCeilingsForLevel(
   }
 
   if (ceilingsToCreate.length > 0) {
-    sceneStore.getState().createNodes(ceilingsToCreate.map((node) => ({ node, parentId: levelId })))
+    sceneStore
+      .getState()
+      .createNodes(ceilingsToCreate.map((node) => ({ node, parentId: levelId as AnyNodeId })))
   }
 }
 
@@ -818,12 +841,12 @@ export function detectSpacesForLevel(levelId: string, walls: WallNode[]) {
 
 function runSpaceDetection(
   levelIds: string[],
-  sceneStore: any,
-  editorStore: any,
-  nodes: any,
+  sceneStore: SceneStoreLike,
+  editorStore: SpaceEditorStoreLike,
+  nodes: Record<AnyNodeId, AnyNode>,
 ): void {
   const { updateNodes } = sceneStore.getState()
-  const existingSpaces = editorStore.getState().spaces as Record<string, Space>
+  const existingSpaces = editorStore.getState().spaces
   const nextSpaces: Record<string, Space> = {}
 
   for (const [spaceId, space] of Object.entries(existingSpaces)) {
@@ -834,21 +857,25 @@ function runSpaceDetection(
 
   for (const levelId of levelIds) {
     const walls = Object.values(nodes).filter(
-      (node: any): node is WallNode => node?.type === 'wall' && node.parentId === levelId,
+      (node: AnyNode): node is WallNode => node.type === 'wall' && node.parentId === levelId,
     )
 
     const slabs = Object.values(nodes).filter(
-      (node: any) => node?.type === 'slab' && node.parentId === levelId,
+      (node: AnyNode): node is SlabNodeType => node.type === 'slab' && node.parentId === levelId,
     )
     const ceilings = Object.values(nodes).filter(
-      (node: any) => node?.type === 'ceiling' && node.parentId === levelId,
+      (node: AnyNode): node is CeilingNodeType =>
+        node.type === 'ceiling' && node.parentId === levelId,
     )
 
     const { wallUpdates, spaces, roomPolygons } = detectSpacesFromWalls(levelId, walls)
 
     const changedWallUpdates = wallUpdates.filter((update) => {
       const wall = nodes[update.wallId]
-      return wall && (wall.frontSide !== update.frontSide || wall.backSide !== update.backSide)
+      return (
+        wall?.type === 'wall' &&
+        (wall.frontSide !== update.frontSide || wall.backSide !== update.backSide)
+      )
     })
 
     if (changedWallUpdates.length > 0) {
@@ -866,13 +893,13 @@ function runSpaceDetection(
     syncAutoSlabsForLevel(
       levelId,
       roomPolygons,
-      slabs.map((slab: any) => SlabNode.parse(slab)),
+      slabs.map((slab) => SlabNode.parse(slab)),
       sceneStore,
     )
     syncAutoCeilingsForLevel(
       levelId,
       roomPolygons,
-      ceilings.map((ceiling: any) => CeilingNode.parse(ceiling)),
+      ceilings.map((ceiling) => CeilingNode.parse(ceiling)),
       sceneStore,
     )
 
@@ -907,11 +934,14 @@ export function isSpaceDetectionPaused(): boolean {
   return spaceDetectionPauseDepth > 0
 }
 
-export function initSpaceDetectionSync(sceneStore: any, editorStore: any): () => void {
+export function initSpaceDetectionSync(
+  sceneStore: SceneStoreLike,
+  editorStore: SpaceEditorStoreLike,
+): () => void {
   const previousSnapshots = new Map<string, string>()
   let isProcessing = false
 
-  const unsubscribe = sceneStore.subscribe((state: any) => {
+  const unsubscribe = sceneStore.subscribe((state: SceneState) => {
     if (isProcessing) return
     if (getSceneHistoryPauseDepth() > 0) return
 
@@ -919,10 +949,10 @@ export function initSpaceDetectionSync(sceneStore: any, editorStore: any): () =>
     const wallsByLevel = new Map<string, WallNode[]>()
 
     for (const node of Object.values(nodes)) {
-      if (node && (node as any).type === 'wall' && (node as any).parentId) {
-        const levelId = (node as any).parentId as string
+      if (node.type === 'wall' && node.parentId) {
+        const levelId = node.parentId
         const levelWalls = wallsByLevel.get(levelId) ?? []
-        levelWalls.push(node as WallNode)
+        levelWalls.push(node)
         wallsByLevel.set(levelId, levelWalls)
       }
     }
