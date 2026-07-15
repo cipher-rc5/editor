@@ -34,7 +34,7 @@
     "zustand": "5.0.14"
   },
   "devDependencies": {
-    "@pascal/typescript-config": "*",
+    "@pascal/typescript-config": "workspace:*",
     "@types/node": "26.1.1",
     "@types/react": "19.2.17",
     "@types/three": "0.185.1",

@@ -14,10 +14,10 @@
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
-    "@pascal-app/core": "*",
-    "@pascal-app/ifc-converter": "*",
-    "@pascal-app/nodes": "*",
-    "@pascal-app/viewer": "*",
+    "@pascal-app/core": "workspace:*",
+    "@pascal-app/ifc-converter": "workspace:*",
+    "@pascal-app/nodes": "workspace:*",
+    "@pascal-app/viewer": "workspace:*",
     "lucide-react": "1.24.0",
     "@react-three/drei": "10.7.7",
     "@react-three/fiber": "9.6.1",
@@ -34,7 +34,7 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@pascal/typescript-config": "*",
+    "@pascal/typescript-config": "workspace:*",
     "@types/node": "26.1.1",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",

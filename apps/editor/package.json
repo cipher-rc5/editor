@@ -4,8 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "dotenv -e ../../.env.local -- next dev --port 3002",
-    "build": "dotenv -e ../../.env.local -- next build",
+    "dev": "set -a && . ../../.env.local 2>/dev/null; set +a; next dev --port 3002",
+    "build": "set -a && . ../../.env.local 2>/dev/null; set +a; next build",
     "start": "next start",
     "lint": "biome lint",
     "check-types": "next typegen && tsc --noEmit"
@@ -13,11 +13,11 @@
   "dependencies": {
     "@iconify/react": "6.0.2",
     "@number-flow/react": "0.6.1",
-    "@pascal-app/core": "*",
-    "@pascal-app/editor": "*",
-    "@pascal-app/mcp": "*",
-    "@pascal-app/nodes": "*",
-    "@pascal-app/viewer": "*",
+    "@pascal-app/core": "workspace:*",
+    "@pascal-app/editor": "workspace:*",
+    "@pascal-app/mcp": "workspace:*",
+    "@pascal-app/nodes": "workspace:*",
+    "@pascal-app/viewer": "workspace:*",
     "@radix-ui/react-tooltip": "1.2.12",
     "@react-three/drei": "10.7.7",
     "@react-three/fiber": "9.6.1",
@@ -35,7 +35,7 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@pascal/typescript-config": "*",
+    "@pascal/typescript-config": "workspace:*",
     "@types/node": "26.1.1",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
