@@ -4,9 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "set -a && . ../../.env.local 2>/dev/null; set +a; next dev --port 3002",
-    "build": "set -a && . ../../.env.local 2>/dev/null; set +a; next build",
-    "start": "next start",
+    "dev": "set -a && . ../../.env.local 2>/dev/null; set +a; bun --bun next dev --port 3002",
+    "build": "set -a && . ../../.env.local 2>/dev/null; set +a; bun --bun next build",
+    "start": "bun --bun next start",
     "lint": "biome lint",
     "check-types": "next typegen && tsc --noEmit"
   },
