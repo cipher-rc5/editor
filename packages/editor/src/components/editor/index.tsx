@@ -78,8 +78,6 @@ const DELETE_CURSOR_BADGE_OFFSET_X = 14
 const DELETE_CURSOR_BADGE_OFFSET_Y = 14
 const PAINT_CURSOR_BADGE_COLOR = '#818cf8'
 const PAINT_CURSOR_BADGE_DISABLED_COLOR = '#94a3b8'
-const PAINT_CURSOR_BADGE_OFFSET_X = 14
-const PAINT_CURSOR_BADGE_OFFSET_Y = 14
 const SCENE_READY_FALLBACK_MS = 8000
 const EDITOR_HOVER_STYLES: HoverStyles = {
   default: { visibleColor: 0x00_aa_ff, hiddenColor: 0xf3_ff_47, strength: 5, pulse: true },
@@ -802,7 +800,6 @@ function PaintCursorLayer({
 
 const ViewerCanvas = memo(function ViewerCanvas({
   isVersionPreviewMode,
-  isLoading,
   isFirstPersonMode,
   isStudioMode,
   hasLoadedInitialScene,

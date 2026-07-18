@@ -265,7 +265,7 @@ function buildCombustionTrain(
   group: Group,
   dims: { hw: number; hd: number; H: number; openTop: number; frontZ: number },
 ): void {
-  const { hw, hd, H, openTop } = dims
+  const { hw, hd, openTop } = dims
   const burnerMat = new MeshStandardMaterial({
     color: BURNER_COLOR,
     metalness: 0.35,
@@ -309,7 +309,7 @@ function buildCombustionTrain(
 
 /** Gas supply pipe with a capped drip leg, down the front-left (furnace). */
 function buildGasLine(
-  node: HvacEquipmentNode,
+  _node: HvacEquipmentNode,
   group: Group,
   dims: { hw: number; hd: number; H: number },
 ): void {

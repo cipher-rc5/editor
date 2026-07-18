@@ -1,6 +1,6 @@
 'use client'
 
-import { nodeRegistry, resolveLevelId, sceneRegistry, useScene } from '@pascal-app/core'
+import { nodeRegistry, resolveLevelId, useScene } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import useEditor, {
   hasCustomPersistedEditorUiState,
@@ -343,30 +343,6 @@ export function syncEditorSelectionFromCurrentScene() {
   }
 }
 
-function resetEditorInteractionState() {
-  useViewer.getState().setHoveredId(null)
-  useViewer.getState().resetSelection()
-  // Clear outliner arrays synchronously so stale Object3D refs from the old
-  // scene don't leak into the post-processing pipeline's outline passes.
-  const outliner = useViewer.getState().outliner
-  outliner.selectedObjects.length = 0
-  outliner.hoveredObjects.length = 0
-  sceneRegistry.clear()
-  useEditor.setState({
-    phase: 'site',
-    mode: 'select',
-    tool: null,
-    structureLayer: 'elements',
-    catalogCategory: null,
-    selectedItem: null,
-    movingNode: null,
-    selectedReferenceId: null,
-    spaces: {},
-    editingHole: null,
-    hoveredHole: null,
-    isPreviewMode: false,
-  })
-}
 
 function hasUsableSceneGraph(sceneGraph?: SceneGraph | null): sceneGraph is SceneGraph {
   return (

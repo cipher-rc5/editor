@@ -3,7 +3,6 @@
 import {
   type AnyNodeId,
   DEFAULT_WALL_HEIGHT,
-  type FenceNode,
   getWallCurveFrameAt,
   getWallThickness,
   isCurvedWall,
@@ -656,93 +655,6 @@ function WallMoveArrowHandle({ wall, handle }: { wall: WallNode; handle: WallMov
   )
 }
 
-function FenceMoveArrowHandle({ fence, handle }: { fence: FenceNode; handle: WallMoveHandle }) {
-  const [isHovered, setIsHovered] = useState(false)
-  const arrowGeometry = useMemo(() => createArrowHandleGeometry(), [])
-  const hitGeometry = useMemo(() => createArrowHitAreaGeometry(), [])
-  const hitMaterial = useInvisibleHitAreaMaterial()
-  const arrowMaterial = useMemo(
-    () =>
-      new MeshBasicNodeMaterial({
-        color: new Color(ARROW_COLOR),
-        side: DoubleSide,
-        depthTest: false,
-        depthWrite: false,
-        transparent: true,
-        opacity: 1,
-      }),
-    [],
-  )
-  const { camera } = useThree()
-
-  const zoom = camera instanceof OrthographicCamera ? 1 / camera.zoom : 1
-  const baseScale = zoom * ARROW_SCALE
-  const scale = (isHovered ? 1.12 : 1) * baseScale
-
-  useEffect(() => {
-    arrowMaterial.color.set(isHovered ? ARROW_HOVER_COLOR : ARROW_COLOR)
-  }, [arrowMaterial, isHovered])
-
-  useEffect(() => {
-    return () => {
-      if (document.body.style.cursor === 'grab' || document.body.style.cursor === 'grabbing') {
-        document.body.style.cursor = ''
-      }
-    }
-  }, [])
-
-  useEffect(() => () => arrowGeometry.dispose(), [arrowGeometry])
-  useEffect(() => () => hitGeometry.dispose(), [hitGeometry])
-  useEffect(() => () => arrowMaterial.dispose(), [arrowMaterial])
-
-  const activateFenceMove = (event: ThreeEvent<PointerEvent>) => {
-    event.stopPropagation()
-    suppressBoxSelectForPointer(event)
-    document.body.style.cursor = 'grabbing'
-
-    sfxEmitter.emit('sfx:item-pick')
-    useEditor.getState().setMovingNode(fence)
-    useEditor.getState().setMovingWallEndpoint(null)
-    useEditor.getState().setMovingFenceEndpoint(null)
-    useEditor.getState().setCurvingWall(null)
-    useEditor.getState().setCurvingFence(null)
-    // Keep the fence selected so it stays active once the move commits.
-  }
-
-  return (
-    <group position={handle.position} rotation={[0, handle.rotationY, 0]}>
-      <InvisibleHandleHitArea
-        geometry={hitGeometry}
-        material={hitMaterial}
-        onPointerDown={activateFenceMove}
-        onPointerEnter={(event) => {
-          event.stopPropagation()
-          setIsHovered(true)
-          document.body.style.cursor = 'grab'
-        }}
-        onPointerLeave={(event) => {
-          event.stopPropagation()
-          setIsHovered(false)
-          if (document.body.style.cursor === 'grab') {
-            document.body.style.cursor = ''
-          }
-        }}
-        scale={baseScale}
-      />
-      <mesh
-        // Pass geometry as a prop — see WallMoveArrowHandle for the
-        // WebGPU "Vertex buffer slot 0 ... was not set" rationale.
-        frustumCulled={false}
-        geometry={arrowGeometry}
-        material={arrowMaterial}
-        raycast={NO_RAYCAST}
-        renderOrder={1002}
-        scale={scale}
-      />
-    </group>
-  )
-}
-
 function getWallMoveHandles(wall: WallNode): WallMoveHandle[] {
   const dx = wall.end[0] - wall.start[0]
   const dz = wall.end[1] - wall.start[1]
@@ -762,77 +674,6 @@ function getWallMoveHandles(wall: WallNode): WallMoveHandle[] {
   const wallHeight = wall.height ?? DEFAULT_WALL_HEIGHT
   const handleHeight = Math.max(wallHeight - HANDLE_TOP_INSET, HANDLE_MIN_HEIGHT)
   const offset = Math.max(getWallThickness(wall) / 2 + HANDLE_OFFSET, HANDLE_MIN_OFFSET)
-
-  return [
-    buildWallMoveHandle('front', midpoint, normal, offset, handleHeight),
-    buildWallMoveHandle('back', midpoint, [-normal[0], -normal[1]], offset, handleHeight),
-  ]
-}
-
-function WallMoveSideHandlesForFence({ fence }: { fence: FenceNode }) {
-  const [levelObject, setLevelObject] = useState<Object3D | null>(() =>
-    fence.parentId ? (sceneRegistry.nodes.get(fence.parentId) ?? null) : null,
-  )
-
-  useEffect(() => {
-    let frameId = 0
-
-    const resolveLevelObject = () => {
-      const nextLevelObject = fence.parentId
-        ? (sceneRegistry.nodes.get(fence.parentId) ?? null)
-        : null
-      setLevelObject((currentLevelObject) => {
-        if (currentLevelObject === nextLevelObject) {
-          return currentLevelObject
-        }
-        return nextLevelObject
-      })
-
-      if (!nextLevelObject) {
-        frameId = window.requestAnimationFrame(resolveLevelObject)
-      }
-    }
-
-    resolveLevelObject()
-
-    return () => {
-      if (frameId) {
-        window.cancelAnimationFrame(frameId)
-      }
-    }
-  }, [fence.parentId])
-
-  const handles = useMemo(() => getFenceMoveHandles(fence), [fence])
-
-  if (!levelObject || handles.length === 0) return null
-
-  return createPortal(
-    <group>
-      {handles.map((handle) => (
-        <FenceMoveArrowHandle fence={fence} handle={handle} key={handle.key} />
-      ))}
-    </group>,
-    levelObject,
-  )
-}
-
-function getFenceMoveHandles(fence: FenceNode): WallMoveHandle[] {
-  const dx = fence.end[0] - fence.start[0]
-  const dz = fence.end[1] - fence.start[1]
-  const length = Math.hypot(dx, dz)
-
-  if (length < 1e-6) {
-    return []
-  }
-
-  const midpoint: [number, number] = [
-    (fence.start[0] + fence.end[0]) / 2,
-    (fence.start[1] + fence.end[1]) / 2,
-  ]
-  const normal: [number, number] = [-dz / length, dx / length]
-  const fenceHeight = fence.height ?? 1.8
-  const handleHeight = Math.max(fenceHeight - HANDLE_TOP_INSET, HANDLE_MIN_HEIGHT)
-  const offset = Math.max((fence.thickness ?? 0.1) / 2 + HANDLE_OFFSET, HANDLE_MIN_OFFSET)
 
   return [
     buildWallMoveHandle('front', midpoint, normal, offset, handleHeight),

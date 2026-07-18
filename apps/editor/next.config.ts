@@ -25,6 +25,11 @@ const nextConfig: NextConfig = {
     },
   },
   experimental: {
+    // The repo pins `typescript` to the TS7 native preview (tsgo), which ships
+    // no JS language API. Without this, Next loads TS via the JS API, fails to
+    // find it, and shells out to pnpm to auto-install a real TS — which crashes
+    // the dev server. This flag makes Next invoke the installed `tsc` directly.
+    useTypeScriptCli: true,
     serverActions: {
       bodySizeLimit: '100mb',
     },

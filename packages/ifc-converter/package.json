@@ -29,7 +29,7 @@
   "devDependencies": {
     "@pascal/typescript-config": "workspace:*",
     "@types/bun": "1.3.13",
-    "typescript": "7.0.2"
+    "typescript": "5.9.3"
   },
   "repository": {
     "type": "git",

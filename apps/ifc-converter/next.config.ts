@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
   logging: {
     browserToTerminal: true,
   },
+  experimental: {
+    // See apps/editor/next.config.ts: the repo's `typescript` is the TS7 native
+    // preview (no JS API), so Next must invoke the installed `tsc` directly.
+    useTypeScriptCli: true,
+  },
   transpilePackages: [
     'three',
     '@pascal-app/core',

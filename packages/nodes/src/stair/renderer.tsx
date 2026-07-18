@@ -296,7 +296,7 @@ function StairRailings({ stair, material }: { stair: StairNode; material: THREE.
 
   return (
     <group name="stair-railing">
-      {railPaths.map((segmentPath, index) => (
+      {railPaths.map((segmentPath) => (
         <group
           key={`${segmentPath.layout.segment.id}-railing`}
           position={[

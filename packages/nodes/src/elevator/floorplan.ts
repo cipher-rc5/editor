@@ -87,13 +87,9 @@ export function buildElevatorFloorplan(
     toPlan(-halfW, halfD),
   ]
 
-  // Runtime state — current level / target level / queued.
+  // Runtime state — current level / target level / queued. Consumed by
+  // the served-level chip column below (see isCurrent/isTarget/isQueued).
   const runtime = useInteractive.getState().elevators[node.id]
-  const isCarOnLevel = parentLevelId ? runtime?.currentLevelId === parentLevelId : false
-  const isTargetLevel = parentLevelId ? runtime?.targetLevelId === parentLevelId : false
-  const isQueuedLevel = parentLevelId
-    ? (runtime?.queue.includes(parentLevelId as never) ?? false)
-    : false
 
   const view = ctx.viewState
   const palette = view?.palette

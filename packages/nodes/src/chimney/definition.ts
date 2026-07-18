@@ -16,21 +16,9 @@ import { ChimneyNode } from './schema'
 // Side handle offsets in metres. Match the roof-segment values so a
 // segment + chimney selected back-to-back use the same visual rhythm.
 const SIDE_HANDLE_OFFSET = 0.25
-const HEIGHT_HANDLE_OFFSET = 0.25
 const ROTATE_CORNER_OFFSET = 0.35
 const MIN_BODY_DIM = 0.3
 const MIN_HEIGHT_ABOVE_RIDGE = 0.05
-const MIN_FLUE_HEIGHT = 0.05
-const MAX_FLUE_HEIGHT = 1.5
-const MIN_CAP_THICKNESS = 0.02
-const MAX_CAP_THICKNESS = 0.5
-const MIN_CAP_OVERHANG = 0
-const MAX_CAP_OVERHANG = 0.3
-// Cap-reveal gap between body top and cap base — mirrors the
-// `CAP_REVEAL` constant in `geometry.ts`. Local copy because handle
-// placements need to know the cap's Y range and the geometry's
-// constant isn't exported. If you change it here, change it there.
-const CAP_REVEAL = 0.003
 // Fallback Y when the host segment can't be resolved (shouldn't happen
 // for a placed chimney, but `placement.position` runs synchronously and
 // must always return a vector).
@@ -62,19 +50,6 @@ function getBodyMidY(node: ChimneyNodeType, segment: RoofSegmentNodeType): numbe
 // handle and cap-thickness handle both reference this Y.
 function getBodyTopY(node: ChimneyNodeType, segment: RoofSegmentNodeType): number {
   return segment.wallHeight + getActiveRoofHeight(segment) + node.heightAboveRidge
-}
-
-// Cap base Y — the bottom of the cap slab. Sits just above the body
-// top with a small reveal gap so a shadow line separates them.
-function getCapBaseY(node: ChimneyNodeType, segment: RoofSegmentNodeType): number {
-  return getBodyTopY(node, segment) + CAP_REVEAL
-}
-
-// Cap top Y — the top of the cap slab. Falls back to body top when no
-// cap is rendered (flues mount on whichever is the upper surface).
-function getCapTopY(node: ChimneyNodeType, segment: RoofSegmentNodeType): number {
-  if (!node.cap || node.capShape === 'none') return getBodyTopY(node, segment)
-  return getCapBaseY(node, segment) + node.capThickness
 }
 
 // Width arrow on the +X (right) or -X (left) side. Asymmetric resize:
@@ -165,7 +140,7 @@ function chimneyHeightAboveRidgeHandle(): HandleDescriptor<ChimneyNodeType> {
     shape: 'tracker',
     min: MIN_HEIGHT_ABOVE_RIDGE,
     currentValue: (n) => n.heightAboveRidge,
-    apply: (initial, newValue) => ({
+    apply: (_initial, newValue) => ({
       heightAboveRidge: Math.max(MIN_HEIGHT_ABOVE_RIDGE, newValue),
     }),
     placement: {
@@ -217,89 +192,6 @@ function chimneyRotateHandle(): HandleDescriptor<ChimneyNodeType> {
   }
 }
 
-// Flue-height chevron at the center of the cap top, pointing upward.
-// Drag adjusts `flueHeight` for ALL flues uniformly — the schema only
-// carries a single scalar. Placed at chimney center (X=Z=0) so the
-// handle stays valid regardless of `flueCount` / `flueSpacing`. Anchor
-// is 'min' so the flue base stays pinned to the cap and the top edge
-// follows the pointer.
-function chimneyFlueHeightHandle(): HandleDescriptor<ChimneyNodeType> {
-  return {
-    kind: 'linear-resize',
-    axis: 'y',
-    anchor: 'min',
-    portal: 'grandparent',
-    min: MIN_FLUE_HEIGHT,
-    max: MAX_FLUE_HEIGHT,
-    currentValue: (n) => n.flueHeight,
-    apply: (_n, newValue) => ({ flueHeight: newValue }),
-    placement: {
-      position: (n, sceneApi) => {
-        const segment = resolveHostSegment(n, sceneApi)
-        // Sit the chevron at the flue top so it visually attaches to
-        // the thing being dragged. Fallback Y mirrors the body-top
-        // fallback above.
-        const baseY = segment ? getCapTopY(n, segment) : FALLBACK_BODY_MID_Y
-        return [0, baseY + n.flueHeight, 0]
-      },
-    },
-  }
-}
-
-// Cap-thickness chevron above the cap top, pointing upward. Anchor is
-// 'min' so the cap base stays at body-top + reveal and the top edge
-// follows the pointer.
-function chimneyCapThicknessHandle(): HandleDescriptor<ChimneyNodeType> {
-  return {
-    kind: 'linear-resize',
-    axis: 'y',
-    anchor: 'min',
-    portal: 'grandparent',
-    min: MIN_CAP_THICKNESS,
-    max: MAX_CAP_THICKNESS,
-    currentValue: (n) => n.capThickness,
-    apply: (_n, newValue) => ({ capThickness: newValue }),
-    placement: {
-      position: (n, sceneApi) => {
-        const segment = resolveHostSegment(n, sceneApi)
-        // Offset toward +Z (away from chimney center on the depth axis)
-        // so the cap-thickness chevron doesn't overlap the flue-height
-        // chevron at X=0,Z=0. Pick the cap edge minus a small margin so
-        // it sits on top of the cap, not floating off to the side.
-        const isRound = n.bodyShape === 'round'
-        const halfZ = (isRound ? n.width : n.depth) / 2
-        const z = halfZ * 0.35
-        const y = segment ? getCapTopY(n, segment) : FALLBACK_BODY_MID_Y
-        return [0, y, z]
-      },
-    },
-  }
-}
-
-// Cap-overhang radial chevron on the +X edge of the cap. Outward 1:1
-// drag grows the overhang; the cap's half-extent is `width/2 + overhang`.
-function chimneyCapOverhangHandle(): HandleDescriptor<ChimneyNodeType> {
-  return {
-    kind: 'radial-resize',
-    axis: 'x',
-    portal: 'grandparent',
-    min: MIN_CAP_OVERHANG,
-    max: MAX_CAP_OVERHANG,
-    currentValue: (n) => n.capOverhang,
-    apply: (_n, newValue) => ({ capOverhang: newValue }),
-    placement: {
-      position: (n, sceneApi) => {
-        const segment = resolveHostSegment(n, sceneApi)
-        // Cap mid-height in the chimney-local frame so the chevron sits
-        // on the cap edge, not above or below it.
-        const capBaseY = segment ? getCapBaseY(n, segment) : FALLBACK_BODY_MID_Y
-        const y = capBaseY + n.capThickness / 2
-        return [n.width / 2 + n.capOverhang + SIDE_HANDLE_OFFSET, y, 0]
-      },
-    },
-  }
-}
-
 const chimneyHandles = (node: ChimneyNodeType): HandleDescriptor<ChimneyNodeType>[] => {
   const descriptors: HandleDescriptor<ChimneyNodeType>[] = [
     chimneyWidthHandle('right'),
@@ -307,18 +199,6 @@ const chimneyHandles = (node: ChimneyNodeType): HandleDescriptor<ChimneyNodeType
   ]
   if (node.bodyShape !== 'round') descriptors.push(chimneyDepthHandle())
   descriptors.push(chimneyHeightAboveRidgeHandle(), chimneyRotateHandle())
-  // Conditional flue/cap handles are temporarily disabled — they fired
-  // a "Color target has no corresponding fragment stage output" WebGPU
-  // validation error that the original four handles don't trigger. The
-  // descriptor shapes (linear-resize y / radial-resize x) match other
-  // working handles in the codebase, so the cause is likely a TSL/MRT
-  // pipeline interaction we haven't pinned down. Re-enable one at a
-  // time after isolating the trigger; the factory + helpers are kept so
-  // we can flip them back on without re-deriving the placement math.
-  // if (node.cap && node.capShape !== 'none') {
-  //   descriptors.push(chimneyCapThicknessHandle(), chimneyCapOverhangHandle())
-  // }
-  // if (node.flueCount > 0) descriptors.push(chimneyFlueHeightHandle())
   return descriptors
 }
 

@@ -703,8 +703,6 @@ export const CustomCameraControls = () => {
     const updateConfig = () => {
       if (!controls.current) return
 
-      const shift = keyState.shiftRight || keyState.shiftLeft
-      const control = keyState.controlRight || keyState.controlLeft
       const space = keyState.space
 
       const wheelAction =

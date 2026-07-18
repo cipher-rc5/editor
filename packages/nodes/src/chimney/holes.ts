@@ -287,7 +287,7 @@ function buildPanelCutters(node: ChimneyNode, topY: number): Brush[] {
 }
 
 function buildCutter(
-  node: ChimneyNode,
+  _node: ChimneyNode,
   spec: { shape: 'round' | 'square'; sizeX: number; sizeZ: number; xCenter: number },
   yBot: number,
   yTop: number,

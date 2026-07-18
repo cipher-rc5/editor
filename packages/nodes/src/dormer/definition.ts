@@ -15,17 +15,12 @@ import { dormerParametrics } from './parametrics'
 import { DormerNode } from './schema'
 
 const SIDE_HANDLE_OFFSET = 0.25
-const HEIGHT_HANDLE_OFFSET = 0.25
 const ROTATE_CORNER_OFFSET = 0.35
 const ROTATE_RING_OFFSET = 0.08
 // Schema/parametrics ranges — keep these aligned with `dormerParametrics`
 // so the in-world drag and the inspector slider clamp identically.
 const MIN_DIM = 0.5
 const MIN_HEIGHT = 0
-const MIN_ROOF_HEIGHT = 0
-const MAX_ROOF_HEIGHT = 2
-const MIN_SKIRT = 0.2
-const MAX_SKIRT = 6
 // Window-handle constants. The window opening is parametric geometry
 // on the dormer's +Z gable face; chevrons sit just outside its rim
 // with a small forward Z offset so they pop in front of the wall plane
@@ -160,41 +155,6 @@ function dormerWallHeightHandle(): HandleDescriptor<DormerNodeType> {
 // leader; the dashed line would point the wrong way for a downward
 // span. The auto-orient logic in `ArrowHandle` flips the chevron to
 // point -Y when placement.y < 0, so the arrow visibly points down.
-function dormerWallSkirtHandle(): HandleDescriptor<DormerNodeType> {
-  return {
-    kind: 'linear-resize',
-    axis: 'y',
-    anchor: 'max',
-    min: MIN_SKIRT,
-    max: MAX_SKIRT,
-    currentValue: (n) => n.wallSkirtHeight,
-    apply: (_n, newValue) => ({ wallSkirtHeight: newValue }),
-    placement: {
-      position: (n) => [0, -(n.wallSkirtHeight + HEIGHT_HANDLE_OFFSET), 0],
-    },
-  }
-}
-
-// Roof-height chevron at the dormer's peak. Drag adjusts `roofHeight`
-// directly — unlike roof-segment there's no pitch back-solve because
-// dormer stores roof height as a literal scalar, not a pitch angle.
-// Placed slightly above the apex (height + roofHeight) so the chevron
-// visually attaches to the ridge.
-function dormerRoofHeightHandle(): HandleDescriptor<DormerNodeType> {
-  return {
-    kind: 'linear-resize',
-    axis: 'y',
-    anchor: 'min',
-    min: MIN_ROOF_HEIGHT,
-    max: MAX_ROOF_HEIGHT,
-    currentValue: (n) => n.roofHeight,
-    apply: (_n, newValue) => ({ roofHeight: newValue }),
-    placement: {
-      position: (n) => [0, n.height + n.roofHeight + HEIGHT_HANDLE_OFFSET, 0],
-    },
-  }
-}
-
 // Whole-dormer rotation gizmo at the +X / +Z corner of the footprint,
 // guide ring traces the corner-diagonal radius on hover / drag.
 // Dormer-local frame is the registered group (renderer applies
@@ -360,18 +320,6 @@ const dormerHandles: HandleDescriptor<DormerNodeType>[] = [
   dormerWindowWidthHandle('left'),
   dormerWindowHeightHandle('top'),
   dormerWindowHeightHandle('bottom'),
-  // The wall-skirt (downward chevron), roof-height (peak chevron), and
-  // the asymmetric front/back depth split stay out for now. Re-adding
-  // any of them previously fired the "Color target has no
-  // corresponding fragment stage output" WebGPU pipeline error chimney
-  // already documented for its flue / cap-thickness / cap-overhang
-  // extras — only reproducible while `portal: 'grandparent'` was set,
-  // which we no longer rely on (RoofEditSystem reveals the wrapper
-  // instead). The shapes themselves are valid; if the count budget
-  // turns out to also be sensitive without grandparent portal, drop
-  // the window handles first since the inspector covers them too.
-  // dormerWallSkirtHandle(),
-  // dormerRoofHeightHandle(),
 ]
 
 /**

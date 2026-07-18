@@ -1,5 +1,5 @@
 import { type AnyNode, type AnyNodeId, sceneRegistry } from '@pascal-app/core'
-import type { Node, TextureNode, WebGPURenderer } from 'three/webgpu'
+import type { Node, WebGPURenderer } from 'three/webgpu'
 
 /**
  * Reads the id set for a node kind from the scene registry.
@@ -65,15 +65,6 @@ export function isWebGPUBackend(backend: unknown): boolean {
     candidate.isWebGPUBackend === true ||
     candidate.constructor?.name === 'WebGPUBackend'
   )
-}
-
-/**
- * `SSGINode` produces a texture at runtime via `getTextureNode()`, but
- * `@types/three` types `SSGINode` as a bare `TempNode` without that method.
- * This helper isolates the one call that reaches past the published surface.
- */
-export function ssgiTextureNode(ssgiPass: unknown): TextureNode {
-  return (ssgiPass as { getTextureNode(): TextureNode }).getTextureNode()
 }
 
 /**

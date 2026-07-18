@@ -821,7 +821,6 @@ const SELECTION_STRATEGIES: Record<string, SelectionStrategy> = {
 }
 
 export const SelectionManager = () => {
-  const phase = useEditor((s) => s.phase)
   const mode = useEditor((s) => s.mode)
   const setHoverHighlightMode = useViewer((s) => s.setHoverHighlightMode)
   const modifierKeysRef = useRef<SelectionModifierKeys>({

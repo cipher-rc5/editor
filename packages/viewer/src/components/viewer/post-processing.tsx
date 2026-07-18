@@ -379,14 +379,17 @@ const PostProcessingPasses = ({
         giPass.useScreenSpaceSampling.value = SSGI_PARAMS.useScreenSpaceSampling
         giPass.useTemporalFiltering = SSGI_PARAMS.useTemporalFiltering
 
-        const giTexture = (giPass as any).getTextureNode()
-
-        const gi = giPass.rgb
+        // three r185 split SSGI's single combined texture into separate AO and
+        // GI nodes. AO is now a single-channel (RedFormat) node in `.r`; GI is
+        // a vec3 node. (The old API packed GI in rgb + AO in alpha of one
+        // texture, and the node's default output was that combined texture.)
+        const aoNode = (giPass as any).getAONode()
+        const gi = (giPass as any).getGINode().rgb
         let ao: any
         if (denoiseEnabled) {
           // DenoiseNode only denoises RGB — alpha is passed through unchanged.
-          // SSGI packs AO into alpha, so we remap it into RGB before denoising.
-          const aoAsRgb = vec4(giTexture.a, giTexture.a, giTexture.a, float(1))
+          // Remap the single-channel AO into RGB before denoising.
+          const aoAsRgb = vec4(aoNode.r, aoNode.r, aoNode.r, float(1))
           const denoisePass = denoise(aoAsRgb, scenePassDepth, sceneNormal, camera)
           denoisePass.index.value = 0
           denoisePass.radius.value = 4
@@ -394,7 +397,7 @@ const PostProcessingPasses = ({
         } else {
           // Diagnostic path: feed raw noisy SSGI AO straight through. Will
           // look grainy — that's the point, it isolates denoise cost.
-          ao = giTexture.a
+          ao = aoNode.r
         }
 
         // Composite: scene * AO + diffuse * GI

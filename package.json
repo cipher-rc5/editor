@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "set -a && . ./.env 2>/dev/null; set +a; turbo run dev --env-mode=loose",
+    "dev": "bun run kill; set -a && . ./.env 2>/dev/null; set +a; turbo run dev --env-mode=loose",
     "lint": "biome lint",
     "lint:fix": "biome lint --write",
     "format": "biome format --write",
@@ -11,12 +11,12 @@
     "check": "biome check",
     "check:fix": "biome check --write",
     "check-types": "turbo run check-types",
-    "kill": "lsof -ti:3002 | xargs kill -9 2>/dev/null || echo 'No processes found on port 3002'"
+    "kill": "lsof -ti:3002,3003 | xargs kill -9 2>/dev/null || echo 'No processes found on ports 3002/3003'"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.4",
     "turbo": "2.10.5",
-    "typescript": "7.0.2"
+    "typescript": "5.9.3"
   },
   "engines": {
     "node": ">=18"
@@ -25,7 +25,11 @@
   "overrides": {
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
-    "@types/three": "0.185.1"
+    "@types/three": "0.185.1",
+    "three": "0.185.1",
+    "typescript": "5.9.3",
+    "@react-three/fiber": "9.6.1",
+    "@react-three/drei": "10.7.7"
   },
   "optionalDependencies": {
     "@tailwindcss/oxide-darwin-arm64": "4.3.2",

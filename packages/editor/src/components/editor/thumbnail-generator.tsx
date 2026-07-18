@@ -106,8 +106,11 @@ export const ThumbnailGenerator = ({ onThumbnailCapture }: ThumbnailGeneratorPro
         giPass.useScreenSpaceSampling.value = SSGI_PARAMS.useScreenSpaceSampling
         giPass.useTemporalFiltering = SSGI_PARAMS.useTemporalFiltering
 
-        const giTexture = (giPass as any).getTextureNode()
-        const aoAsRgb = vec4(giTexture.a, giTexture.a, giTexture.a, float(1))
+        // three r185 split SSGI's combined texture into separate AO/GI nodes.
+        // AO is now a single-channel (RedFormat) node — read `.r`, not the old
+        // packed alpha.
+        const aoNode = (giPass as any).getAONode()
+        const aoAsRgb = vec4(aoNode.r, aoNode.r, aoNode.r, float(1))
         const denoisePass = denoise(aoAsRgb, scenePassDepth, sceneNormal, cam)
         denoisePass.index.value = 0
         denoisePass.radius.value = 4

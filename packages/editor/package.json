@@ -11,14 +11,14 @@
     "check-types": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@pascal-app/core": "^0.8.0",
-    "@pascal-app/viewer": "^0.8.0",
-    "@react-three/drei": "^10",
-    "@react-three/fiber": "^9",
-    "next": ">=15",
-    "react": "^18 || ^19",
-    "react-dom": "^18 || ^19",
-    "three": "^0.184"
+    "@pascal-app/core": "latest",
+    "@pascal-app/viewer": "latest",
+    "@react-three/drei": "10.7.7",
+    "@react-three/fiber": "9.6.1",
+    "next": "16.2.10",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "three": "0.185.1"
   },
   "dependencies": {
     "@dnd-kit/core": "6.3.1",
@@ -43,7 +43,7 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "cmdk": "1.1.1",
-    "lucide-react": "1.24.0",
+    "lucide-react": "1.25.0",
     "mitt": "3.0.1",
     "motion": "12.42.2",
     "nanoid": "6.0.0",
@@ -56,10 +56,10 @@
     "@pascal-app/core": "workspace:*",
     "@pascal-app/viewer": "workspace:*",
     "@pascal/typescript-config": "workspace:*",
-    "@types/bun": "1.3.13",
+    "@types/bun": "1.3.14",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@types/three": "0.185.1",
-    "typescript": "7.0.2"
+    "typescript": "5.9.3"
   }
 }

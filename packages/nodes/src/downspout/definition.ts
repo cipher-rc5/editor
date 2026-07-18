@@ -79,7 +79,7 @@ function downspoutLengthHandle(): HandleDescriptor<DownspoutNodeType> {
 // Usable half-span — keep the outlet a hair inside each end so the
 // collar never lands on a cap (the geometry clamps too; this bounds the
 // drag). Reads the host gutter's length.
-function moveBound(n: DownspoutNodeType, gutter: GutterNode | undefined): number {
+function moveBound(_n: DownspoutNodeType, gutter: GutterNode | undefined): number {
   return Math.max(0.05, Math.max(0.05, gutter?.length ?? 2) / 2 - 0.1)
 }
 

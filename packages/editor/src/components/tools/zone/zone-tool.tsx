@@ -67,7 +67,6 @@ export const ZoneTool: React.FC = () => {
   const levelYRef = useRef(0) // Track current level Y position
   const shiftPressed = useRef(false)
   const currentLevelId = useViewer((state) => state.selection.levelId)
-  const setTool = useEditor((state) => state.setTool)
 
   // Preview state for reactive rendering (for shape and point markers)
   const [preview, setPreview] = useState<PreviewState>({
@@ -91,7 +90,7 @@ export const ZoneTool: React.FC = () => {
     // grid-multiple lengths without leaving the ray.
     const snapDraftPoint = (
       lastPoint: [number, number],
-      gridPoint: [number, number],
+      _gridPoint: [number, number],
       rawPoint: [number, number],
     ): [number, number] => {
       if (shiftPressed.current) return rawPoint

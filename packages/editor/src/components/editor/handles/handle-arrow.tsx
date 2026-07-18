@@ -144,7 +144,6 @@ export function createRotateArrowHandleGeometry() {
   const innerCorner1: [number, number] = [rIn * Math.cos(a1), rIn * Math.sin(a1)]
   const outerCorner1: [number, number] = [rOut * Math.cos(a1), rOut * Math.sin(a1)]
   const innerCorner2: [number, number] = [rIn * Math.cos(a2), rIn * Math.sin(a2)]
-  const outerCorner2: [number, number] = [rOut * Math.cos(a2), rOut * Math.sin(a2)]
 
   const shape = new Shape()
   shape.moveTo(innerCorner1[0], innerCorner1[1])

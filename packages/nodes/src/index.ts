@@ -1,4 +1,6 @@
 import type { AnyNodeDefinition, Plugin } from '@pascal-app/core'
+import { extend } from '@react-three/fiber'
+import { Line } from 'three'
 import { boxVentDefinition } from './box-vent'
 import { buildingDefinition } from './building'
 import { ceilingDefinition } from './ceiling'
@@ -40,6 +42,16 @@ import { turbineVentDefinition } from './turbine-vent'
 import { wallDefinition } from './wall'
 import { windowDefinition } from './window'
 import { zoneDefinition } from './zone'
+
+// `<threeLine>` maps to `THREE.Line`, but `Line` collides with the SVG `line`
+// element so R3F requires the `three`-prefixed tag. R3F resolves the tag by
+// PascalCasing it and looking up that exact catalog key — `<threeLine>` →
+// `catalogue['ThreeLine']`. `extend(THREE)` (in viewer) only registers a
+// `Line` key, never `ThreeLine`, so `<threeLine>` throws "not part of the
+// THREE namespace". Register the prefixed key explicitly. (`lineSegments` and
+// `lineBasicMaterial` don't collide, so `extend(THREE)`'s `LineSegments` /
+// `LineBasicMaterial` keys already cover them.)
+extend({ ThreeLine: Line })
 
 /**
  * Built-in plugin bundling every node kind shipped with the Pascal editor.

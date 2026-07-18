@@ -518,12 +518,6 @@ function computeSegmentTransforms(segments: StairSegmentNode[]): SegmentTransfor
   return transforms
 }
 
-function rotateXZ(x: number, z: number, angle: number): [number, number] {
-  const cos = Math.cos(angle)
-  const sin = Math.sin(angle)
-  return [x * cos + z * sin, -x * sin + z * cos]
-}
-
 function createEmptyGeometry(): THREE.BufferGeometry {
   const geometry = new THREE.BufferGeometry()
   // Three zero-vertices (one degenerate, invisible triangle), not an empty
