@@ -42,9 +42,9 @@ function computeGeometryBoundsTree(geometry: THREE.BufferGeometry) {
   // See scene-bvh.tsx: two `three-mesh-bvh` versions augment `three` (0.8.3 via
   // three-bvh-csg vs 0.9.9 direct), so the merged `computeBoundsTree` signature
   // (`=> MeshBVH`) rejects the 0.9.9 helper. Bind the runtime helper and call
-  // the 0.9.9 import directly so `maxLeafSize` resolves against its options.
+  // the 0.9.9 import directly so `targetLeafSize` resolves against its options.
   geometry.computeBoundsTree = computeBoundsTree as unknown as typeof geometry.computeBoundsTree
-  computeBoundsTree.call(geometry, { maxLeafSize: 10 })
+  computeBoundsTree.call(geometry, { targetLeafSize: 10 })
 }
 
 function csgGeometry(brush: Brush): THREE.BufferGeometry {

@@ -17,7 +17,7 @@ type SceneBvhProps = {
   verbose?: boolean
   setBoundingBox?: boolean
   maxDepth?: number
-  maxLeafSize?: number
+  targetLeafSize?: number
   indirect?: boolean
 }
 
@@ -31,7 +31,16 @@ const hasBvhCompatibleGeometry = (geometry?: BufferGeometry | null) => {
   if (!position) return false
 
   const vertexCount = geometry.getIndex()?.count ?? position.count
-  return vertexCount >= 3
+  if (vertexCount < 3) return false
+
+  // A geometry whose groups are all count-0 yields zero BVH primitive ranges,
+  // and three-mesh-bvh's computeBoundsTree throws on `firstRange.offset`. Such
+  // geometry (e.g. a degenerate placeholder mesh) is not raycast-relevant.
+  if (geometry.groups.length > 0 && !geometry.groups.some((group) => group.count > 0)) {
+    return false
+  }
+
+  return true
 }
 
 export const SceneBvh = forwardRef<Group, SceneBvhProps>(
@@ -44,7 +53,7 @@ export const SceneBvh = forwardRef<Group, SceneBvhProps>(
       verbose = false,
       setBoundingBox = true,
       maxDepth = 40,
-      maxLeafSize = 10,
+      targetLeafSize = 10,
       indirect = false,
     },
     forwardedRef,
@@ -69,7 +78,7 @@ export const SceneBvh = forwardRef<Group, SceneBvhProps>(
         verbose,
         setBoundingBox,
         maxDepth,
-        maxLeafSize,
+        targetLeafSize,
         indirect,
       }
       const group = ref.current
@@ -107,7 +116,8 @@ export const SceneBvh = forwardRef<Group, SceneBvhProps>(
         } catch (error) {
           console.warn('[viewer] Skipping BVH for incompatible mesh geometry.', {
             mesh: child.name || child.type,
-            error,
+            reason: error instanceof Error ? error.message : String(error),
+            groups: geometry.groups.length,
           })
         }
       })
@@ -134,7 +144,7 @@ export const SceneBvh = forwardRef<Group, SceneBvhProps>(
       verbose,
       setBoundingBox,
       maxDepth,
-      maxLeafSize,
+      targetLeafSize,
       indirect,
       raycaster,
     ])

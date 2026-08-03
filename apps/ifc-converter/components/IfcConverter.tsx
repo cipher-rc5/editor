@@ -32,6 +32,13 @@ function meta(node: { metadata?: unknown } | null | undefined): ConverterMetadat
   return (node?.metadata ?? {}) as ConverterMetadata
 }
 
+// Base URL of the standalone editor app that owns the scene store
+// (`POST /api/scenes`). Overridable at build time; defaults to the local
+// editor dev server. NEXT_PUBLIC_ is inlined by Next at build time.
+const EDITOR_BASE_URL = process.env.NEXT_PUBLIC_EDITOR_BASE_URL ?? 'http://localhost:3002'
+
+type SaveState = 'idle' | 'saving' | 'saved' | 'error'
+
 // The details panel reads a loose, display-oriented view of a node's optional
 // geometry fields (which vary per node kind). This structural type keeps those
 // reads type-safe without spreading casts across the JSX.
@@ -66,6 +73,8 @@ export default function IfcConverter() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [conversionProgress, setConversionProgress] = useState<number>(0)
   const [conversionMessage, setConversionMessage] = useState<string>('')
+  const [saveState, setSaveState] = useState<SaveState>('idle')
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const levels = useMemo(() => {
     if (!pascalData) return []
@@ -153,6 +162,8 @@ export default function IfcConverter() {
     setSelectedNodeId(null)
     setConversionProgress(0)
     setConversionMessage('Starting conversion...')
+    setSaveState('idle')
+    setSaveError(null)
 
     try {
       const result = await convertIfcToPascal(data, (message, percent) => {
@@ -258,6 +269,37 @@ export default function IfcConverter() {
     a.download = `${fileName.replace('.ifc', '')}_pascal.json`
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const saveToEditor = async () => {
+    if (!pascalData || saveState === 'saving') return
+    setSaveState('saving')
+    setSaveError(null)
+    try {
+      const name = fileName.replace(/\.ifc$/i, '').trim() || 'Imported IFC scene'
+      const response = await fetch(`${EDITOR_BASE_URL}/api/scenes`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          graph: {
+            nodes: pascalData.nodes,
+            rootNodeIds: pascalData.rootNodeIds,
+          },
+        }),
+      })
+      if (!response.ok) {
+        const detail = await response.text().catch(() => '')
+        throw new Error(`Save failed (${response.status})${detail ? `: ${detail}` : ''}`)
+      }
+      const meta = (await response.json()) as { id?: string; editorUrl?: string }
+      setSaveState('saved')
+      const path = meta.editorUrl ?? (meta.id ? `/editor/${meta.id}` : null)
+      if (path) window.open(`${EDITOR_BASE_URL}${path}`, '_blank', 'noopener')
+    } catch (err) {
+      setSaveState('error')
+      setSaveError(err instanceof Error ? err.message : 'Save failed')
+    }
   }
 
   const downloadIfc = () => {
@@ -391,12 +433,33 @@ export default function IfcConverter() {
                   </button>
                   <button
                     onClick={downloadPascalJson}
-                    className="px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-3 py-1.5 text-sm font-medium bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors"
                   >
                     Download Pascal JSON
                   </button>
+                  <button
+                    onClick={saveToEditor}
+                    disabled={saveState === 'saving'}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                      saveState === 'error'
+                        ? 'bg-red-600 text-white hover:bg-red-700'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    } ${saveState === 'saving' ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    title={saveError ?? 'Save this scene to the editor and open it'}
+                  >
+                    {saveState === 'saving'
+                      ? 'Saving…'
+                      : saveState === 'saved'
+                        ? 'Saved ✓ — open editor'
+                        : saveState === 'error'
+                          ? 'Retry save'
+                          : 'Save to Editor'}
+                  </button>
                 </div>
               </div>
+              {saveState === 'error' && saveError && (
+                <p className="text-xs text-red-600 text-right">{saveError}</p>
+              )}
 
               {/* Type filter */}
               {elementTypes.length > 1 && (
