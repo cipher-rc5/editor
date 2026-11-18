@@ -14,8 +14,8 @@
     "kill": "lsof -ti:3002,3003 | xargs kill -9 2>/dev/null || echo 'No processes found on ports 3002/3003'"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.4",
-    "turbo": "2.10.5",
+    "@biomejs/biome": "2.6.8",
+    "turbo": "2.11.13",
     "typescript": "5.9.3"
   },
   "engines": {
@@ -32,14 +32,14 @@
     "@react-three/drei": "10.7.7"
   },
   "optionalDependencies": {
-    "@tailwindcss/oxide-darwin-arm64": "4.3.2",
-    "@tailwindcss/oxide-darwin-x64": "4.3.2",
-    "@tailwindcss/oxide-linux-arm64-gnu": "4.3.2",
-    "@tailwindcss/oxide-linux-x64-gnu": "4.3.2",
-    "lightningcss-darwin-arm64": "1.32.0",
-    "lightningcss-darwin-x64": "1.32.0",
-    "lightningcss-linux-arm64-gnu": "1.32.0",
-    "lightningcss-linux-x64-gnu": "1.32.0"
+    "@tailwindcss/oxide-darwin-arm64": "4.3.5",
+    "@tailwindcss/oxide-darwin-x64": "4.3.5",
+    "@tailwindcss/oxide-linux-arm64-gnu": "4.3.5",
+    "@tailwindcss/oxide-linux-x64-gnu": "4.3.5",
+    "lightningcss-darwin-arm64": "1.33.0",
+    "lightningcss-darwin-x64": "1.33.0",
+    "lightningcss-linux-arm64-gnu": "1.33.0",
+    "lightningcss-linux-x64-gnu": "1.33.0"
   },
   "workspaces": [
     "apps/*",
